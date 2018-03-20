@@ -1,3 +1,4 @@
+import sys
 import argparse
 import mido
 from modules.midiHelper import *
@@ -8,6 +9,49 @@ allStrips = []
 class Setup:
     def __init__(self, ipAddr=None, port=80 ):
         print("new setup")
+        self.ipAddr = ipAddr
+        self.port = port
+        
+        midiPort = mido.get_input_names()[0]
+        self.midiIN = mido.open_input(midiPort)
+        
+
+
+    def setupInterface(self):
+        print("Setup the MOTU: use 4 first vPot to set IP, validate with F1, cancel with F2")
+        # listen to midi event
+        
+        vPotCC = [16, 17, 18, 19]
+        ip = [0, 0, 0, 0]
+
+        msg = self.midiIN.receive()
+        while msg:
+            if msg.type == "control_change" :
+                direction = 1 if msg.value == 1 else -1
+                potId = vPotCC.index(msg.control)
+
+                ip[potId] = ip[potId] + direction
+
+                sys.stdout.write("\r\x1b[K"+ip.__str__())
+                sys.stdout.flush()
+            
+            if msg.type == "note_on" :
+                print("")
+                midiFullNote = midiNumberToFullNote(msg.note)
+                if midiFullNote ==  "G2":
+                    print("Validated MOTU IP: {}.{}.{}.{}".format(ip[0],ip[1],ip[2],ip[3]))
+                    self.ipAddr = "{}.{}.{}.{}".format(ip[0],ip[1],ip[2],ip[3])
+                    break
+                if midiFullNote ==  "G2":
+                    print("Cancel ")
+                    break
+
+
+            msg = self.midiIN.receive()
+
+
+
+
 
 def setupController(debug):
 

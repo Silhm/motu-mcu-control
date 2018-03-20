@@ -13,6 +13,7 @@ import mido
 
 from modules.midiHelper import *
 from modules.settings import Settings 
+from setup import Setup
 
 class MidiWait:
 
@@ -21,12 +22,22 @@ class MidiWait:
         midiPort = mido.get_input_names()[0]
         self.midiIN = mido.open_input(midiPort)
         self.settings = Settings()
+        self.hwSetup = Setup()
+
         
         self.mixerUrl = "http://{}:{}".format(ipAddr,port)
         print("Will send events to mixer at {}".format(self.mixerUrl))
 
 
+    def setup(self):
+        """
+        Set up the bridge
+        """
+        self.hwSetup.setupInterface()
 
+
+
+    
     def sendQueryMessage(self, address, values):
         """
         Send the corresponding  message
@@ -220,7 +231,6 @@ class MidiWait:
         self.sendQueryMessage(address, values)
         
         self.settings.setMute(ch,newStatus)
-
 
 
 
