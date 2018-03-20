@@ -6,7 +6,7 @@ sys.path.insert(0,parentdir)
 
 import mido
 import time 
-from lib.midiHelper import *
+from modules.midiHelper import *
 
 
 midiPort = mido.get_input_names()[0]

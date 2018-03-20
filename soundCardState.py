@@ -12,7 +12,7 @@ import sqlite3
 
 import mido
 
-from lib.midiHelper import *
+from modules.midiHelper import *
 
 class State:
 

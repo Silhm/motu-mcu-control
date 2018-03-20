@@ -11,8 +11,8 @@ import sqlite3
 
 import mido
 
-from lib.midiHelper import *
-from lib.settings import Settings 
+from modules.midiHelper import *
+from modules.settings import Settings 
 
 class MidiWait:
 

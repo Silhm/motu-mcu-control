@@ -1,6 +1,6 @@
 import argparse
 import mido
-from lib.midiHelper import *
+from modules.midiHelper import *
 
 
 allStrips = []
