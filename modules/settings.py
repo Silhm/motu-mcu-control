@@ -6,6 +6,7 @@ class Settings:
         self.vPotPos = [0]*8
         self.solo = [False]*8
         self.mute = [False]*8
+        self.function = [False]*8
         self.bank = 0
 
     #fader
@@ -43,5 +44,12 @@ class Settings:
     def setCurrentBank(self,bank):
         self.bank = bank
         
-    
+    #F buttons
+    def setFunction(self, fId, status):
+        self.function[fId] = status
+        return status
+
+    def getFunction(self, fId):
+        return self.function[fId]
+
 

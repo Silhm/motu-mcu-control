@@ -13,14 +13,18 @@ import mido
 
 from modules.midiHelper import *
 from modules.settings import Settings 
+from modules.mcu import MCU 
 from setup import Setup
 
 class MidiWait:
 
     def __init__(self, ipAddr=None, port=80 ):
         # Init Midi client and display available devices
-        midiPort = mido.get_input_names()[0]
-        self.midiIN = mido.open_input(midiPort)
+        midiINPort = mido.get_input_names()[0]
+        midiOUTPort = mido.get_output_names()[0]
+        self.midiIN = mido.open_input(midiINPort)
+        self.midiOUT = mido.open_output(midiOUTPort)
+        self.MCU = MCU()
         self.settings = Settings()
         self.hwSetup = Setup()
 
@@ -38,18 +42,24 @@ class MidiWait:
 
 
     
-    def sendQueryMessage(self, address, values):
+    def sendQueryMessage(self, address, value):
         """
         Send the corresponding  message
             - address is a string
             - value is an array
         """
-        url = "{}{}".format(self.mixerUrl,address)
-        r = requests.post(url,values)
-        print(">Query [{}] {}  {} with data {}".format(r.status_code,self.mixerUrl, address,values))
+        value = json.dumps(value)
+        url = "{}/datastore{}".format(self.mixerUrl,address)
+        print("{} {}".format(url,value))
 
-    
+        r = requests.post(url, {"json":value})
+
+
+        #print(">Query [{}] {}  {} with data {}".format(r.status_code,self.mixerUrl, address,value))
+        print("{}".format(r))
+
     def routeMessage(self, midiMessage):
+        print("midiIN {}:".format(midiMessage))
         # Faders
         if midiMessage.type == "pitchwheel" :
             self._handlePitchWheel(midiMessage.channel, midiMessage.pitch)
@@ -58,7 +68,7 @@ class MidiWait:
         if midiMessage.type == "control_change" :
             self._handleVpotRot(midiMessage.control,midiMessage.value)
             
-        if midiMessage.type == "note_on" :
+        if midiMessage.type == "note_on" and midiMessage.velocity == 127 :
             soloMidiNotes = ["E0", "F0", "F#0", "G0", "G#0", "A0", "A#0", "B0"]
             muteMidiNotes = ["C1", "C#1", "D1", "D#1", "E1", "F1", "F#1", "G1"]
             vPotMidiNotes = ["G#1", "A1", "A#1", "B1", "C2", "C#2", "D2", "D#2"]
@@ -119,7 +129,17 @@ class MidiWait:
         Handle the function Buttons F1 -> F8    
         """
         print("Button F{} clicked".format(fNum+1))
+        # get previous know state and toggle it
+        fState = self.settings.getFunction(fNum)
 
+ 
+        if fNum == 7:
+            address = "/mix/monitor/0/matrix/mute"
+            values = {"value":1} if fState else {"value":0}
+            self.sendQueryMessage(address, values)
+            fState = self.settings.setFunction(fNum,not fState)
+            # update led on button
+            self.MCU.fLed(8,fState)
 
     def _handleBankButton(self, up):
         """
