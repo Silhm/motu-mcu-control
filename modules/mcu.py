@@ -1,9 +1,7 @@
 import mido
 import time 
 
-from modules.midiHelper import *
-
-
+from midiHelper import *
 
 
 class MCU:
@@ -44,6 +42,36 @@ class MCU:
         note = midiFullNoteToNumber(l2MidiNotes[fId-1])
         msg = mido.Message("note_on", note=note, velocity=127 if status else 0)
         self.midiOUT.send(msg)
+
+
+    def vPotRing(self, vPotId, value, mode="single-dot"):
+        """
+        mode could be :
+            - "single-dot" (default)
+            - "boost-cut"
+            - "wrap"
+            - "spread"
+        needTo analyze LogicControl_EN.pdf
+        """
+        modeByte = {
+                "single-dot":0,
+                "boost-cut":1,
+                "wrap":2,
+                "spread":3
+        }
+        
+        ccValue = bytes([0,1, 0,modeByte[mode], 7,2, 7,16])
+
+
+        print("vPot {}:{}".format(vPotId,value))
+        cc = [30, 31, 32, 33, 34, 35, 36, 37][vPotId-1]
+        msg = mido.Message('control_change',  control=cc, value=65)
+        self.midiOUT.send(msg)
+
+
+    def faderPos(self, fId, pos):
+        print("TODO: fader pos")
+    
 
 
 
