@@ -44,7 +44,7 @@ class MCU:
         self.midiOUT.send(msg)
 
 
-    def vPotRing(self, vPotId, value, mode="single-dot"):
+    def vPotRing(self, vPotId, value, mode):
         """
         mode could be :
             - "single-dot" (default)
@@ -52,6 +52,11 @@ class MCU:
             - "wrap"
             - "spread"
         needTo analyze LogicControl_EN.pdf
+
+        B0, 3i, XX
+
+
+
         """
         modeByte = {
                 "single-dot":0,
@@ -59,13 +64,22 @@ class MCU:
                 "wrap":2,
                 "spread":3
         }
+
+        byteArray = [0,1, 0,modeByte[mode]]
+
+        byteArray.append(value)
+        byteArray.append(0x00)
+
+
+        bytesVal = bytes(byteArray)
+        ccValue = 0
+        for bit in bytesVal:
+            ccValue = (ccValue << 1) | bit
+
+        print("vPot {}:{}".format(vPotId,ccValue))
+        cc = list(range(48,56))[vPotId-1]
         
-        ccValue = bytes([0,1, 0,modeByte[mode], 7,2, 7,16])
-
-
-        print("vPot {}:{}".format(vPotId,value))
-        cc = [30, 31, 32, 33, 34, 35, 36, 37][vPotId-1]
-        msg = mido.Message('control_change',  control=cc, value=65)
+        msg = mido.Message('control_change',  control=cc, value=ccValue)
         self.midiOUT.send(msg)
 
 
@@ -97,4 +111,12 @@ if __name__ == "__main__":
         time.sleep(0.1)
     for i in range(1,9):
         mcu.l2Led(i,False)
+        time.sleep(0.1)
+
+
+    for i in range(1,9):
+        for j in range(0,127):
+            mcu.vPotRing(i,j,"single-dot")
+            time.sleep(0.01)
+
         time.sleep(0.1)
