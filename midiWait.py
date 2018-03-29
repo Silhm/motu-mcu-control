@@ -14,6 +14,7 @@ import mido
 from modules.midiHelper import *
 from modules.settings import Settings 
 from modules.mcu import MCU 
+from modules.motu import Motu
 from setup import Setup
 
 class MidiWait:
@@ -25,6 +26,7 @@ class MidiWait:
         self.midiIN = mido.open_input(midiINPort)
         self.midiOUT = mido.open_output(midiOUTPort)
         self.MCU = MCU()
+        self.motu = Motu(ipAddr, port)
         self.settings = Settings()
         self.hwSetup = Setup()
 
@@ -53,10 +55,9 @@ class MidiWait:
         print("{} {}".format(url,value))
 
         r = requests.post(url, {"json":value})
-
-
         #print(">Query [{}] {}  {} with data {}".format(r.status_code,self.mixerUrl, address,value))
         print("{}".format(r))
+
 
     def routeMessage(self, midiMessage):
         print("midiIN {}:".format(midiMessage))
@@ -114,7 +115,6 @@ class MidiWait:
         """
         Handle the Encoder groups button (only top and bottom right)
         """
-        # Write this in database
         """
         if clicked and name == "TopRight" :
             self.db.setButtonMode("solomute")
@@ -134,12 +134,11 @@ class MidiWait:
 
  
         if fNum == 7:
-            address = "/mix/monitor/0/matrix/mute"
-            values = {"value":1} if fState else {"value":0}
-            self.sendQueryMessage(address, values)
+            self.motu.muteMonitor(fState)
             fState = self.settings.setFunction(fNum,not fState)
             # update led on button
             self.MCU.fLed(8,fState)
+
 
     def _handleBankButton(self, up):
         """
@@ -187,7 +186,6 @@ class MidiWait:
         values = { "value":newPos}
         self.sendQueryMessage(address, values)
         self.settings.setVpotPos(ch,newPos)
-
 
 
     def _handleVpotRot(self, cc, value):

@@ -1,7 +1,7 @@
 import mido
 import time 
 
-from midiHelper import *
+from .midiHelper import *
 
 
 class MCU:
@@ -11,7 +11,39 @@ class MCU:
         self.midiIN = mido.open_input(inPort)
         self.midiOUT = mido.open_output(outPort)
 
-    
+        self.mode = "main"
+        self.vPotMode = "pan"
+
+
+    def setMode(self, mode):
+        """
+        """
+        self.mode = mode 
+        # TODO : find notes for correct mode
+        modeNotes = {
+                "main":"G2",
+                "monitoring":"G#2",
+                "send":"A2",
+                "unknown":"A#2"
+        }
+        note = midiFullNoteToNumber(modeNotes[mode])
+        
+        # first, turn off all leds
+        self.midiOUT.send(mido.Message("note_on", note=42, velocity=0))
+        self.midiOUT.send(mido.Message("note_on", note=43, velocity=0))
+        self.midiOUT.send(mido.Message("note_on", note=44, velocity=0))
+        self.midiOUT.send(mido.Message("note_on", note=45, velocity=0))
+
+        # then, light on the good one!
+        msg = mido.Message("note_on", note=note, velocity=127 if status else 0)
+        self.midiOUT.send(msg)
+
+
+    def getMode(self):
+        return self.mode
+
+
+   
     def fLed(self, fId,status):
         """
         from 1 to 8
@@ -22,7 +54,6 @@ class MCU:
         self.midiOUT.send(msg)
         print("led {}: {}".format(fId, functionMidiNotes[fId-1]))
         print(msg)
-
 
 
     def l1Led(self, fId,status):
@@ -54,9 +85,11 @@ class MCU:
         needTo analyze LogicControl_EN.pdf
 
         B0, 3i, XX
-
-
-
+            31 hex  = 49 dec
+            XX:  0 p xx vv vv
+                 p : center led on (1) / off (0) -> no use with BCF
+                xx : vpot mode 00 -> 03
+                vv : value 00 -> 7F
         """
         modeByte = {
                 "single-dot":0,
@@ -66,17 +99,16 @@ class MCU:
         }
 
         byteArray = [0,1, 0,modeByte[mode]]
+        valueAsBytes = (int(value)).to_bytes(1, byteorder='big')
 
-        byteArray.append(value)
-        byteArray.append(0x00)
-
-
-        bytesVal = bytes(byteArray)
+        bytesVal = bytes(byteArray) + valueAsBytes 
         ccValue = 0
         for bit in bytesVal:
             ccValue = (ccValue << 1) | bit
 
-        print("vPot {}:{}".format(vPotId,ccValue))
+        print("vPot {}:{}  bytes[{}]   valToSend: {}".format(vPotId,value, bytesVal, ccValue))
+
+
         cc = list(range(48,56))[vPotId-1]
         
         msg = mido.Message('control_change',  control=cc, value=ccValue)
