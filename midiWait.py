@@ -25,14 +25,15 @@ class MidiWait:
         midiOUTPort = mido.get_output_names()[0]
         self.midiIN = mido.open_input(midiINPort)
         self.midiOUT = mido.open_output(midiOUTPort)
-        self.MCU = MCU()
+        self.mcu = MCU()
         self.motu = Motu(ipAddr, port)
         self.settings = Settings()
         self.hwSetup = Setup()
-
-        
+    
         self.mixerUrl = "http://{}:{}".format(ipAddr,port)
         print("Will send events to mixer at {}".format(self.mixerUrl))
+
+        self.recall()
 
 
     def setup(self):
@@ -40,9 +41,7 @@ class MidiWait:
         Set up the bridge
         """
         self.hwSetup.setupInterface()
-
-
-
+        
     
     def sendQueryMessage(self, address, value):
         """
@@ -79,17 +78,17 @@ class MidiWait:
             
             # Solo
             if midiFullNote in soloMidiNotes:
-                ch  = soloMidiNotes.index(midiFullNote)
+                ch  = soloMidiNotes.index(midiFullNote) + 1
                 self._handleSoloButton(ch)
 
             # Mute
             if midiFullNote in muteMidiNotes:
-                ch  = muteMidiNotes.index(midiFullNote)
+                ch  = muteMidiNotes.index(midiFullNote) + 1
                 self._handleMuteButton(ch)
 
             # vPots click
             if midiFullNote in vPotMidiNotes:
-                ch  = vPotMidiNotes.index(midiFullNote)
+                ch  = vPotMidiNotes.index(midiFullNote) + 1
                 self._handleVpotClick(ch)
 
             # Bank buttons 
@@ -137,7 +136,7 @@ class MidiWait:
             self.motu.muteMonitor(fState)
             fState = self.settings.setFunction(fNum,not fState)
             # update led on button
-            self.MCU.fLed(8,fState)
+            self.mcu.fLed(8,fState)
 
 
     def _handleBankButton(self, up):
@@ -169,12 +168,16 @@ class MidiWait:
         midiRange = [-8192,8176]
         
         faderValue = convertValueToOSCRange(value, apiRange, midiRange)
+        
+        if ch is 7: # and mode is monito!
+            self.motu.setMainFader(faderValue)
+        elif ch is 6: # and mode is monito!
+            self.motu.setMonitorFader(faderValue)
+        else:
+            self.motu.setFader(ch, faderValue)
 
-        address = "/mix/chan/{}/matrix/fader".format(ch)
-        values = { "value":faderValue}
-    
-        self.sendQueryMessage(address, values)
-
+        self.mcu.faderPos(ch, value)        
+        
 
     def _handleVpotClick(self, ch):
         """
@@ -191,22 +194,24 @@ class MidiWait:
     def _handleVpotRot(self, cc, value):
         """
         Handle vPot rotation 
+        TODO: speed
         """
         vPotCC = [16, 17, 18, 19, 20, 21, 22, 23]
         
         if(cc in vPotCC):
             ch = vPotCC.index(cc) 
         
-        currentPos = self.settings.getVpotPos(ch)
+        currentPos = self.motu.getPan(ch)
         apiRange = [-1,1]
+        midiRange = [0,127]
 
         address = "/mix/chan/{}/matrix/pan".format(ch)
-        direction = 1 if value == 1 else -1
+        direction = 1 if 1 <= value <= 15 else -1
         #speed= rotation[1] if rotation[1]>1 else 1
         #_speeds = [10, 3, 2, 2, 1, 1, 1, 1, 1 , 1]
         #newVal = currentVal + (direction * 5 * (pow(10, -1 * _speeds[speed]  )))
 
-        newPos =  round(currentPos + (direction * 0.045),3)
+        newPos =  round(currentPos + (direction * 0.05),3)
 
         if newPos > apiRange[1]:
             newPos = apiRange[1]
@@ -214,25 +219,43 @@ class MidiWait:
             newPos = apiRange[0]
         
         self.settings.setVpotPos(ch,newPos)
-        
-        values = { "value":newPos}
+        values = {"value":newPos}
         self.sendQueryMessage(address, values)
+        
+        # update led ring
+        midiVal = convertValueToMidiRange(newPos, apiRange, midiRange)
+        self.mcu.vPotRing(ch, midiVal, "single-dot")
 
 
     def _handleSoloButton(self, ch):
         """
         Handle soloButton click 
         """
-        # get previous know state and toggle it
-        solo = self.settings.getSolo(ch)
-        address = "/mix/chan/{}/matrix/solo".format(ch)
+        # get motu state and toggle it
+        mcuMode = self.mcu.getMode()
+        print("mcuMode : {}",format(mcuMode))
+        if mcuMode is "main":
+            if ch == 7: 
+                # monitoring toggle
+                mute = self.motu.getMonitorMute()
+                m=self.motu.muteMonitor(not mute)
+                self.mcu.l1Led(7,not m)
+            if ch == 8: 
+                # main toggle
+                mute = self.motu.getMainMute()
+                m=self.motu.muteMain(not mute)
+                self.mcu.l1Led(8,not m)
 
-        newStatus = not solo
+        else:
+            solo = self.settings.getSolo(ch)
+            address = "/mix/chan/{}/matrix/solo".format(ch)
 
-        values = { "value":newStatus}
-        self.sendQueryMessage(address, values)
-        
-        self.settings.setSolo(ch,newStatus)
+            newStatus = not solo
+
+            values = { "value":newStatus}
+            self.sendQueryMessage(address, values)
+            
+            self.settings.setSolo(ch,newStatus)
 
 
     def _handleMuteButton(self, ch):
@@ -249,6 +272,25 @@ class MidiWait:
         self.sendQueryMessage(address, values)
         
         self.settings.setMute(ch,newStatus)
+
+
+
+    def recall(self):
+        """
+        Set back everything
+        """
+        # todo check mode first
+        apiRange = [0,4]
+        midiRange = [-8192,8176]
+        mainFader = self.motu.getMainFader()
+        monitorFader = self.motu.getMonitorFader()
+        mainFaderValue = convertValueToMidiRange(mainFader, apiRange, midiRange)
+        monitorFaderValue = convertValueToMidiRange(monitorFader, apiRange, midiRange)
+        self.mcu.faderPos(6, monitorFaderValue )
+        self.mcu.faderPos(7, mainFaderValue )
+
+        self.mcu.l1Led(7, not self.motu.getMonitorMute())
+        self.mcu.l1Led(8, not self.motu.getMainMute())
 
 
 

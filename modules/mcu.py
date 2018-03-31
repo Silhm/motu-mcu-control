@@ -1,7 +1,7 @@
 import mido
 import time 
 
-from .midiHelper import *
+from modules.midiHelper import *
 
 
 class MCU:
@@ -116,10 +116,10 @@ class MCU:
 
 
     def faderPos(self, fId, pos):
-        print("TODO: fader pos")
+        msg = mido.Message('pitchwheel',  channel=fId, pitch=pos)
+        self.midiOUT.send(msg)
     
-
-
+        
 
 if __name__ == "__main__":
     mcu = MCU()
