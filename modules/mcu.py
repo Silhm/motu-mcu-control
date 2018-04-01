@@ -14,17 +14,16 @@ class MCU:
         self.mode = "main"
         self.vPotMode = "pan"
 
-
     def setMode(self, mode):
         """
         """
         self.mode = mode 
         # TODO : find notes for correct mode
         modeNotes = {
-                "main":"G2",
-                "monitoring":"G#2",
-                "send":"A2",
-                "unknown":"A#2"
+                "main": "G2",
+                "monitoring": "G#2",
+                "send": "A2",
+                "unknown": "A#2"
         }
         note = midiFullNoteToNumber(modeNotes[mode])
         
@@ -38,25 +37,21 @@ class MCU:
         msg = mido.Message("note_on", note=note, velocity=127 if status else 0)
         self.midiOUT.send(msg)
 
-
     def getMode(self):
         return self.mode
 
-
-   
-    def fLed(self, fId,status):
+    def fLed(self, fId, status):
         """
         from 1 to 8
         """
-        functionMidiNotes = ["G#2","G2","F#2","F2","G6","G#6","A6","A#6"]
+        functionMidiNotes = ["G#2", "G2", "F#2", "F2", "G6", "G#6", "A6", "A#6"]
         note = midiFullNoteToNumber(functionMidiNotes[fId-1])
         msg = mido.Message("note_on", note=note, velocity=127 if status else 0)
         self.midiOUT.send(msg)
         print("led {}: {}".format(fId, functionMidiNotes[fId-1]))
         print(msg)
 
-
-    def l1Led(self, fId,status):
+    def l1Led(self, fId, status):
         """
         from 1 to 8
         """
@@ -73,7 +68,6 @@ class MCU:
         note = midiFullNoteToNumber(l2MidiNotes[fId-1])
         msg = mido.Message("note_on", note=note, velocity=127 if status else 0)
         self.midiOUT.send(msg)
-
 
     def vPotRing(self, vPotId, value, mode):
         """
@@ -98,7 +92,7 @@ class MCU:
                 "spread":3
         }
 
-        byteArray = [0,1, 0,modeByte[mode]]
+        byteArray = [0, 1, 0, modeByte[mode]]
         valueAsBytes = (int(value)).to_bytes(1, byteorder='big')
 
         bytesVal = bytes(byteArray) + valueAsBytes 
@@ -108,18 +102,20 @@ class MCU:
 
         print("vPot {}:{}  bytes[{}]   valToSend: {}".format(vPotId,value, bytesVal, ccValue))
 
-
-        cc = list(range(48,56))[vPotId-1]
+        cc = list(range(48, 56))[vPotId-1]
         
         msg = mido.Message('control_change',  control=cc, value=ccValue)
         self.midiOUT.send(msg)
 
-
     def faderPos(self, fId, pos):
+        """
+        :param fId:
+        :param pos:
+        :return:
+        """
         msg = mido.Message('pitchwheel',  channel=fId, pitch=pos)
         self.midiOUT.send(msg)
     
-        
 
 if __name__ == "__main__":
     mcu = MCU()
@@ -145,10 +141,9 @@ if __name__ == "__main__":
         mcu.l2Led(i,False)
         time.sleep(0.1)
 
-
-    for i in range(1,9):
-        for j in range(0,127):
-            mcu.vPotRing(i,j,"single-dot")
+    for i in range(1, 9):
+        for j in range(0, 127):
+            mcu.vPotRing(i, j, "single-dot")
             time.sleep(0.01)
 
         time.sleep(0.1)

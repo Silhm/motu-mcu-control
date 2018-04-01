@@ -1,7 +1,6 @@
 """
 This program will allow interaction with the motu
 """
-import argparse
 import json
 import requests
 
@@ -25,7 +24,6 @@ class Motu:
         else:    
             print("No Motu soundcard found")
 
-
     def _query(self, address, value):
         """
         Send the corresponding  message
@@ -40,7 +38,6 @@ class Motu:
         print(r)    
         return True if r.status_code is 200 else False
 
-
     def _get(self, address):
         """
         Get the value at a given endPoint
@@ -49,14 +46,12 @@ class Motu:
         r = requests.get(url)
         return r.json() if r.status_code is 200 else False
 
-    
     def _getUid(self):
         """
         Get the uid of the motu soundCard
         """
         uidJson = self._get("/uid")
         return uidJson["value"] if uidJson else False
-
 
     def _getSettings(self):
         """
@@ -65,18 +60,15 @@ class Motu:
         settings = self._get("/avb/{}/".format(self.uid))
         return settings
 
-
-
     ###################################################
     def setSolo(self, ch, solo):
         """
         Solo a given channel
         """
         address = "/mix/chan/{}/matrix/solo".format(ch)
-        values = { "value": 1 if solo else 0}
+        values = {"value": 1 if solo else 0}
         return self._query(address, values)
 
-    
     def getSolo(self, ch):
         """
         Get Solo status of a given channel
@@ -85,16 +77,14 @@ class Motu:
         solo = self._get(address)
         return bool(solo["value"])
 
- 
     ###################################################
     def setMute(self, ch, mute):
         """
         Mute a given channel
         """
         address = "/mix/chan/{}/matrix/mute".format(ch)
-        values = { "value": 1 if mute else 0}
+        values = {"value": 1 if mute else 0}
         return self._query(address, values)
-
 
     def getMute(self, ch):
         """
@@ -104,27 +94,24 @@ class Motu:
         mute = self._get(address)
         return bool(mute["value"])
 
-
     ###################################################
     def setGain(self, ch, gain):
         """
         Set gain of a given channel
         """
         address = "/mix/chan/{}/matrix/???".format(ch)
-        values = { "value": gain}
+        values = {"value": gain}
         print("TODO: set Gain")
-        #return self._query(address, values)
- 
- 
+        # return self._query(address, values)
+
     def getGain(self, ch):
         """
         Get gain of a given channel
         """
         address = "/mix/chan/{}/matrix/???".format(ch)
         print("TODO: get Gain")
-        #return self._query(address, values)
- 
- 
+        # return self._query(address, values)
+
     ###################################################
     def setFader(self, ch, fader):
         """
@@ -133,15 +120,13 @@ class Motu:
         address = "/mix/chan/{}/matrix/fader".format(ch)
         values = { "value": fader}
         return self._query(address, values)
- 
- 
+
     def getFader(self, ch):
         """
         Get fader of a given channel
         """
         address = "/mix/chan/{}/matrix/fader".format(ch)
-        return self._query(address, values)
-
+        return self._get(address)
 
     ###################################################
     def setMainFader(self, fader):
@@ -176,8 +161,6 @@ class Motu:
         fader = self._get(address)
         return fader["value"]
 
-
-
     ###################################################
     def setPan(self, ch, pan):
         """
@@ -190,7 +173,6 @@ class Motu:
             return self._query(address, values)
         else:
             return False
-    
 
     def getPan(self, ch):
         """
@@ -200,7 +182,6 @@ class Motu:
         address = "/mix/chan/{}/matrix/pan".format(ch)
         pan = self._get(address)
         return pan["value"]
-    
 
     ###################################################
     def setEq(self, ch, eq):
@@ -249,15 +230,18 @@ class Motu:
         address = "/mix/chan/{}/eq".format(ch)
         return self._get(address)
 
-
     ###################################################
     def setComp(self, ch):
+        """
+        Enable compressor on given channel
+        """
         print("TODO set Comp")
-
 
     def getComp(self, ch):
+        """
+        Knoww if compressor is enabled on given channel
+        """
         print("TODO set Comp")
-
 
     ###################################################
     def muteMain(self, mute):
@@ -265,17 +249,17 @@ class Motu:
         Mute main outputs
         """
         address = "/mix/main/{}/matrix/mute".format(0)
-        values = { "value": 1 if mute else 0}
+        values = {"value": 1 if mute else 0}
         self._query(address, values)
         return mute
 
     def getMainMute(self):
         """
+        Is Main muted?
         """
         address = "/mix/main/{}/matrix/mute".format(0)
         mute = self._get(address)
         return bool(mute["value"])
-
 
     def muteMonitor(self, mute):
         """
@@ -288,13 +272,22 @@ class Motu:
 
     def getMonitorMute(self):
         """
+        Is monitor muted?
         """
         address = "/mix/monitor/{}/matrix/mute".format(0)
         mute = self._get(address)
         return bool(mute["value"])
 
+    def dim(self, status):
+        """
+        Apply -20dB on current master value
+        """
+        mainFader = self.getMainFader()
+        print("main Fader {}".format(mainFader))
 
-
-
-
+        if status:
+            print("TODO: apply 20db dim on main fader")
+        else:
+            # revert to 0dB
+            self.setMainFader(1)
 

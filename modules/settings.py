@@ -9,42 +9,42 @@ class Settings:
         self.function = [False]*8
         self.bank = 0
 
-    #fader
+    # fader
     def setFaderPos(self, ch, val):
         self.faderPos[ch] = val
     
     def getFaderPos(self, ch):
         return self.faderPos[ch]
 
-    #vPot
+    # vPot
     def setVpotPos(self, ch, val):
         self.vPotPos[ch] = val
     
     def getVpotPos(self, ch):
         return self.vPotPos[ch] if self.vPotPos[ch] else 0
 
-    #solo
+    # solo
     def setSolo(self, ch, status):
         self.solo[ch] = status
     
     def getSolo(self, ch):
         return self.solo[ch]
 
-    #mute
+    # mute
     def setMute(self, ch, status):
         self.mute[ch] = status
     
     def getMute(self, ch):
         return self.mute[ch]
 
-    #bank
+    # bank
     def getCurrentBank(self):
         return self.bank
 
-    def setCurrentBank(self,bank):
+    def setCurrentBank(self, bank):
         self.bank = bank
         
-    #F buttons
+    # F buttons
     def setFunction(self, fId, status):
         self.function[fId] = status
         return status

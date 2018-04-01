@@ -2,21 +2,18 @@
 This program will get the soundcard state by querying it and sending the right midi message to the controller
 """
 import argparse
-import random
-import time
 import json
 
 import requests
-
-import sqlite3
 
 import mido
 
 from modules.midiHelper import *
 
+
 class State:
 
-    def __init__(self, ipAddr=None, port=None ):
+    def __init__(self, ipAddr=None, port=None):
         self.ipAddr = ipAddr
         
         midiPort = mido.get_output_names()[0]
@@ -25,7 +22,6 @@ class State:
         self._chanData = False       
         self.stripCount = 8
 
-    
     def getAll(self):
         """
         Get DataStore for all channels
@@ -37,7 +33,6 @@ class State:
         r = requests.get(url)
         if r.status_code is 200:
             self._chanData = r.json()
-
 
     def refreshController(self):
         """
@@ -53,7 +48,6 @@ class State:
         else:
             print(">> No data <<")
 
-
     def recalFader(self, fId=False):
         """
         Recal position of one fader or all if no id provided
@@ -67,7 +61,6 @@ class State:
                 chanFader = "mix/chan/{}/matrix/fader".format(i)
                 faderVal = self._chanData[chanFader]
                 self._dispatchFader(faderVal, i)
- 
 
     def recalSolo(self, sId=False):
         """
@@ -83,7 +76,6 @@ class State:
                 buttonState = self._chanData[buttonId]
                 self._dispatchButtonsLine1(buttonState, i)
 
-
     def recalMute(self, sId=False):
         """
         Recal state of button line 2 or all if no id provided
@@ -98,18 +90,12 @@ class State:
                 buttonState = self._chanData[buttonId]
                 self._dispatchButtonsLine2(buttonState, i)
 
-
-
-
-
-
-        
     def _dispatchFader(self, faderValue, stripId):
         """
         Convert fader OSC value to MIDI value
         """
-        apiRange = [0,4]
-        midiRange = [-8192,8176]
+        apiRange = [0, 4]
+        midiRange = [-8192, 8176]
         readyVal = convertValueToMidiRange(faderValue, apiRange, midiRange)
         
         # TODO: handle bank (should be available in database or memory)
@@ -118,7 +104,6 @@ class State:
         msg = mido.Message('pitchwheel', pitch=readyVal, channel=stripId)
         self.midiOUT.send(msg)
         print("[{}][fader:{}] [midi OUT] : {} ".format(stripId, faderValue, msg))
-
 
     def _dispatchButtonsLine1(self,  buttonValue, stripId):
         """
@@ -132,7 +117,6 @@ class State:
         self.midiOUT.send(msg)
         print("[{}][solo:{}] [midi OUT] : {} ".format(stripId, bool(buttonValue), msg))
 
-
     def _dispatchButtonsLine2(self,  buttonValue, stripId):
         """
         Convert Mute / Select OSC value to MIDI value
@@ -145,8 +129,7 @@ class State:
         self.midiOUT.send(msg)
         print("[{}][mute:{}] [midi OUT] : {} ".format(stripId, bool(buttonValue), msg))
 
- 
-    def _dispatchButtonsLine2(self,  buttonValue, stripId):
+    def _dispatchButtonsLine2(self, buttonValue, stripId):
         """
         Convert Mute / Select OSC value to MIDI value
         """
@@ -157,16 +140,12 @@ class State:
         msg = mido.Message("note_on", note=midiNote, velocity=midiVelocity)
         self.midiOUT.send(msg)
         print("[{}][mute:{}] [midi OUT] : {} ".format(stripId, bool(buttonValue), msg))
-
-
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ip", default="127.0.0.1",
-        help="The ip of the OSC server")
-    parser.add_argument("--port", type=int, default=8000,
-        help="The port the OSC server is listening on")
+    parser.add_argument("--ip", default="127.0.0.1", help="The ip of the OSC server")
+    parser.add_argument("--port", type=int, default=8000, help="The port the OSC server is listening on")
     parser.add_argument("--debug", action="store_true", help="Use example datastore")
     args = parser.parse_args()
 

@@ -2,12 +2,9 @@
 This program handle MIDI from an MCU midi controller and create event to send to the mixer
 """
 import argparse
-import random
-import time
 import json
 
 import requests 
-import sqlite3
 
 import mido
 
@@ -17,9 +14,10 @@ from modules.mcu import MCU
 from modules.motu import Motu
 from setup import Setup
 
+
 class MidiWait:
 
-    def __init__(self, ipAddr=None, port=80 ):
+    def __init__(self, ipAddr=None, port=80):
         # Init Midi client and display available devices
         midiINPort = mido.get_input_names()[0]
         midiOUTPort = mido.get_output_names()[0]
@@ -30,19 +28,17 @@ class MidiWait:
         self.settings = Settings()
         self.hwSetup = Setup()
     
-        self.mixerUrl = "http://{}:{}".format(ipAddr,port)
+        self.mixerUrl = "http://{}:{}".format(ipAddr, port)
         print("Will send events to mixer at {}".format(self.mixerUrl))
 
         self.recall()
-
 
     def setup(self):
         """
         Set up the bridge
         """
         self.hwSetup.setupInterface()
-        
-    
+
     def sendQueryMessage(self, address, value):
         """
         Send the corresponding  message
@@ -50,18 +46,17 @@ class MidiWait:
             - value is an array
         """
         value = json.dumps(value)
-        url = "{}/datastore{}".format(self.mixerUrl,address)
-        print("{} {}".format(url,value))
+        url = "{}/datastore{}".format(self.mixerUrl, address)
+        print("{} {}".format(url, value))
 
         r = requests.post(url, {"json":value})
-        #print(">Query [{}] {}  {} with data {}".format(r.status_code,self.mixerUrl, address,value))
+        # print(">Query [{}] {}  {} with data {}".format(r.status_code,self.mixerUrl, address,value))
         print("{}".format(r))
-
 
     def routeMessage(self, midiMessage):
         print("midiIN {}:".format(midiMessage))
         # Faders
-        if midiMessage.type == "pitchwheel" :
+        if midiMessage.type == "pitchwheel":
             self._handlePitchWheel(midiMessage.channel, midiMessage.pitch)
 
         # vPots
@@ -101,13 +96,11 @@ class MidiWait:
                 f = functionMidiNotes.index(midiFullNote)
                 self._handleFunctionButton(f)
 
-
     def read(self):
         """ Read Midi message """
         msg = self.midiIN.receive()
         self.routeMessage(msg)
         return msg
-        
 
     # TODO
     def _handleEncoderGrpButtons(self, name, clicked):
@@ -122,7 +115,6 @@ class MidiWait:
         """
         print("button mode: {}".format(name))
 
-
     def _handleFunctionButton(self, fNum):
         """
         Handle the function Buttons F1 -> F8    
@@ -131,13 +123,11 @@ class MidiWait:
         # get previous know state and toggle it
         fState = self.settings.getFunction(fNum)
 
- 
         if fNum == 7:
-            self.motu.muteMonitor(fState)
+            self.motu.dim(fState)
             fState = self.settings.setFunction(fNum,not fState)
             # update led on button
             self.mcu.fLed(8,fState)
-
 
     def _handleBankButton(self, up):
         """
@@ -156,8 +146,6 @@ class MidiWait:
 
         self.settings.setCurrentBank(bank)
 
-
-
     def _handlePitchWheel(self, ch, value):
         """
         Handle fader moves
@@ -168,7 +156,8 @@ class MidiWait:
         midiRange = [-8192,8176]
         
         faderValue = convertValueToOSCRange(value, apiRange, midiRange)
-        
+        # todo : log scale?    
+
         if ch is 7: # and mode is monito!
             self.motu.setMainFader(faderValue)
         elif ch is 6: # and mode is monito!
@@ -177,7 +166,6 @@ class MidiWait:
             self.motu.setFader(ch, faderValue)
 
         self.mcu.faderPos(ch, value)        
-        
 
     def _handleVpotClick(self, ch):
         """
@@ -190,7 +178,6 @@ class MidiWait:
         self.sendQueryMessage(address, values)
         self.settings.setVpotPos(ch,newPos)
 
-
     def _handleVpotRot(self, cc, value):
         """
         Handle vPot rotation 
@@ -198,34 +185,33 @@ class MidiWait:
         """
         vPotCC = [16, 17, 18, 19, 20, 21, 22, 23]
         
-        if(cc in vPotCC):
+        if cc in vPotCC:
             ch = vPotCC.index(cc) 
         
         currentPos = self.motu.getPan(ch)
-        apiRange = [-1,1]
-        midiRange = [0,127]
+        apiRange = [-1, 1]
+        midiRange = [0, 127]
 
         address = "/mix/chan/{}/matrix/pan".format(ch)
         direction = 1 if 1 <= value <= 15 else -1
-        #speed= rotation[1] if rotation[1]>1 else 1
-        #_speeds = [10, 3, 2, 2, 1, 1, 1, 1, 1 , 1]
-        #newVal = currentVal + (direction * 5 * (pow(10, -1 * _speeds[speed]  )))
+        # speed= rotation[1] if rotation[1]>1 else 1
+        # _speeds = [10, 3, 2, 2, 1, 1, 1, 1, 1 , 1]
+        # newVal = currentVal + (direction * 5 * (pow(10, -1 * _speeds[speed]  )))
 
-        newPos =  round(currentPos + (direction * 0.05),3)
+        newPos = round(currentPos + (direction * 0.05), 3)
 
         if newPos > apiRange[1]:
             newPos = apiRange[1]
         if newPos < apiRange[0]:
             newPos = apiRange[0]
         
-        self.settings.setVpotPos(ch,newPos)
-        values = {"value":newPos}
+        self.settings.setVpotPos(ch, newPos)
+        values = {"value": newPos}
         self.sendQueryMessage(address, values)
         
         # update led ring
         midiVal = convertValueToMidiRange(newPos, apiRange, midiRange)
         self.mcu.vPotRing(ch, midiVal, "single-dot")
-
 
     def _handleSoloButton(self, ch):
         """
@@ -233,18 +219,18 @@ class MidiWait:
         """
         # get motu state and toggle it
         mcuMode = self.mcu.getMode()
-        print("mcuMode : {}",format(mcuMode))
+        print("mcuMode : {}", format(mcuMode))
         if mcuMode is "main":
             if ch == 7: 
                 # monitoring toggle
                 mute = self.motu.getMonitorMute()
-                m=self.motu.muteMonitor(not mute)
-                self.mcu.l1Led(7,not m)
+                m = self.motu.muteMonitor(not mute)
+                self.mcu.l1Led(7, not m)
             if ch == 8: 
                 # main toggle
                 mute = self.motu.getMainMute()
                 m=self.motu.muteMain(not mute)
-                self.mcu.l1Led(8,not m)
+                self.mcu.l1Led(8, not m)
 
         else:
             solo = self.settings.getSolo(ch)
@@ -252,11 +238,10 @@ class MidiWait:
 
             newStatus = not solo
 
-            values = { "value":newStatus}
+            values = {"value": newStatus}
             self.sendQueryMessage(address, values)
             
-            self.settings.setSolo(ch,newStatus)
-
+            self.settings.setSolo(ch, newStatus)
 
     def _handleMuteButton(self, ch):
         """
@@ -268,12 +253,10 @@ class MidiWait:
 
         newStatus = not mute 
 
-        values = { "value":newStatus}
+        values = {"value": newStatus}
         self.sendQueryMessage(address, values)
         
-        self.settings.setMute(ch,newStatus)
-
-
+        self.settings.setMute(ch, newStatus)
 
     def recall(self):
         """
@@ -293,13 +276,10 @@ class MidiWait:
         self.mcu.l1Led(8, not self.motu.getMainMute())
 
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ip", default="127.0.0.1",
-        help="The ip of the DAW OSC server")
-    parser.add_argument("--port", type=int, default="80",
-        help="The port the DAW OSC is listening to")
+    parser.add_argument("--ip", default="127.0.0.1", help="The ip of the DAW OSC server")
+    parser.add_argument("--port", type=int, default="80", help="The port the DAW OSC is listening to")
     args = parser.parse_args()
 
     midiWait = MidiWait(args.ip, args.port)
