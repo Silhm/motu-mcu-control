@@ -2,6 +2,7 @@
 This program handle MIDI from an MCU midi controller and create event to send to the mixer
 """
 import argparse
+import math
 import json
 
 import requests 
@@ -49,11 +50,15 @@ class MidiWait:
         url = "{}/datastore{}".format(self.mixerUrl, address)
         print("{} {}".format(url, value))
 
-        r = requests.post(url, {"json":value})
+        r = requests.post(url, {"json": value})
         # print(">Query [{}] {}  {} with data {}".format(r.status_code,self.mixerUrl, address,value))
         print("{}".format(r))
 
     def routeMessage(self, midiMessage):
+        """
+        Route the message to corresponding function
+        :param midiMessage:
+        """
         print("midiIN {}:".format(midiMessage))
         # Faders
         if midiMessage.type == "pitchwheel":
@@ -61,7 +66,7 @@ class MidiWait:
 
         # vPots
         if midiMessage.type == "control_change" :
-            self._handleVpotRot(midiMessage.control,midiMessage.value)
+            self._handleVpotRot(midiMessage.control, midiMessage.value)
             
         if midiMessage.type == "note_on" and midiMessage.velocity == 127 :
             soloMidiNotes = ["E0", "F0", "F#0", "G0", "G#0", "A0", "A#0", "B0"]
@@ -73,7 +78,7 @@ class MidiWait:
             
             # Solo
             if midiFullNote in soloMidiNotes:
-                ch  = soloMidiNotes.index(midiFullNote) + 1
+                ch = soloMidiNotes.index(midiFullNote) + 1
                 self._handleSoloButton(ch)
 
             # Mute
@@ -96,24 +101,31 @@ class MidiWait:
                 f = functionMidiNotes.index(midiFullNote)
                 self._handleFunctionButton(f)
 
+            # Encoder groups : only 2 of 4 are working... need investigation
+            # Top right
+            if midiFullNote in ["A#4", "D#3"]:
+                self._handleEncoderGrpButtons(midiFullNote)
+
+
     def read(self):
-        """ Read Midi message """
+        """
+        Read Midi message
+        """
         msg = self.midiIN.receive()
         self.routeMessage(msg)
         return msg
 
-    # TODO
-    def _handleEncoderGrpButtons(self, name, clicked):
+    def _handleEncoderGrpButtons(self, note):
         """
-        Handle the Encoder groups button (only top and bottom right)
+        Handle the Encoder groups button to change mode (only top and bottom right)
         """
-        """
-        if clicked and name == "TopRight" :
-            self.db.setButtonMode("solomute")
-        elif clicked and name == "BottomRight":
-            self.db.setButtonMode("selectrec")
-        """
-        print("button mode: {}".format(name))
+        print(self.mcu.getMode())
+        if note == "A#4":
+            self.mcu.setMode("main")
+        elif note == "D#3":
+            self.mcu.setMode("mixing")
+
+
 
     def _handleFunctionButton(self, fNum):
         """
@@ -150,17 +162,17 @@ class MidiWait:
         """
         Handle fader moves
         """
-        self.settings.setFaderPos(ch,value) 
+        self.settings.setFaderPos(ch, value)
         
-        apiRange = [0,4]
-        midiRange = [-8192,8176]
+        apiRange = [0, 4]
+        midiRange = [-8192, 8176]
         
         faderValue = convertValueToOSCRange(value, apiRange, midiRange)
         # todo : log scale?    
 
-        if ch is 7: # and mode is monito!
+        if ch is 7:  # and mode is monito!
             self.motu.setMainFader(faderValue)
-        elif ch is 6: # and mode is monito!
+        elif ch is 6:  # and mode is monito!
             self.motu.setMonitorFader(faderValue)
         else:
             self.motu.setFader(ch, faderValue)

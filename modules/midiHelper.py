@@ -1,4 +1,6 @@
 import re
+import math
+
 
 
 def midiNoteToNumber(note, octave):
@@ -56,12 +58,14 @@ def convertValueToMidiRange(oscValue, oscRange, midiRange):
     return int(midiVal)
 
 
-def convertValueToOSCRange(midiValue, oscRange, midiRange):
+def convertValueToOSCRange(midiValue, oscRange, midiRange, scale="linear"):
     """
     value : OSC value
     OscRange: 
     midiRange
     """
+    print("scale {}".format(scale))
+
     minOSC = oscRange[0]
     maxOSC = oscRange[1]
 
@@ -71,4 +75,5 @@ def convertValueToOSCRange(midiValue, oscRange, midiRange):
     percent = (midiValue - minMidi) / (maxMidi-minMidi) * 100.0
     oscVal = (maxOSC - minOSC) * percent / 100 + minOSC
 
+    print(" PITCH = {}  >>  VAL = {}".format(midiValue, oscVal))
     return oscVal

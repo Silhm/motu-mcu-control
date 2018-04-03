@@ -16,28 +16,29 @@ class MCU:
 
     def setMode(self, mode):
         """
+        Define the mcu mode
+        default is main mode
         """
         self.mode = mode 
-        # TODO : find notes for correct mode
         modeNotes = {
-                "main": "G2",
-                "monitoring": "G#2",
-                "send": "A2",
-                "unknown": "A#2"
+                "main": "A#4",
+                "mixing": "D#3",
+                # "send": "A2",
+                # "unknown": "A#2"
         }
         note = midiFullNoteToNumber(modeNotes[mode])
         
         # first, turn off all leds
-        self.midiOUT.send(mido.Message("note_on", note=42, velocity=0))
-        self.midiOUT.send(mido.Message("note_on", note=43, velocity=0))
-        self.midiOUT.send(mido.Message("note_on", note=44, velocity=0))
-        self.midiOUT.send(mido.Message("note_on", note=45, velocity=0))
+        self.midiOUT.send(mido.Message("note_on", note=70, velocity=0))
+        self.midiOUT.send(mido.Message("note_on", note=51, velocity=0))
 
         # then, light on the good one!
-        msg = mido.Message("note_on", note=note, velocity=127 if status else 0)
-        self.midiOUT.send(msg)
+        self.midiOUT.send(mido.Message("note_on", note=note, velocity=127))
 
     def getMode(self):
+        """
+        Get the current set mode
+        """
         return self.mode
 
     def fLed(self, fId, status):
