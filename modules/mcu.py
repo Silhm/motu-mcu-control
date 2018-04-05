@@ -3,6 +3,8 @@ import time
 
 from modules.midiHelper import *
 
+fader_api_range = [0, 4]
+fader_midi_range = [-8192, 8176]
 
 class MCU:
     def __init__(self):
@@ -87,10 +89,10 @@ class MCU:
                 vv : value 00 -> 7F
         """
         modeByte = {
-                "single-dot":0,
-                "boost-cut":1,
-                "wrap":2,
-                "spread":3
+                "single-dot": 0,
+                "boost-cut": 1,
+                "wrap": 2,
+                "spread": 3
         }
 
         byteArray = [0, 1, 0, modeByte[mode]]
@@ -116,7 +118,17 @@ class MCU:
         """
         msg = mido.Message('pitchwheel',  channel=fId, pitch=pos)
         self.midiOUT.send(msg)
-    
+
+    def resetController(self):
+        """
+        Reset controller to null state
+        """
+        for f in range(0, 8):
+            self.faderPos(f, fader_midi_range[0])
+            self.l1Led(f, False)
+            self.l2Led(f, False)
+            self.fLed(f, False)
+
 
 if __name__ == "__main__":
     mcu = MCU()

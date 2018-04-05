@@ -2,7 +2,6 @@
 This program handle MIDI from an MCU midi controller and create event to send to the mixer
 """
 import argparse
-import math
 import json
 
 import requests 
@@ -124,8 +123,7 @@ class MidiWait:
             self.mcu.setMode("main")
         elif note == "D#3":
             self.mcu.setMode("mixing")
-
-
+        self.recall()
 
     def _handleFunctionButton(self, fNum):
         """
@@ -274,18 +272,25 @@ class MidiWait:
         """
         Set back everything
         """
-        # todo check mode first
-        apiRange = [0,4]
-        midiRange = [-8192,8176]
-        mainFader = self.motu.getMainFader()
-        monitorFader = self.motu.getMonitorFader()
-        mainFaderValue = convertValueToMidiRange(mainFader, apiRange, midiRange)
-        monitorFaderValue = convertValueToMidiRange(monitorFader, apiRange, midiRange)
-        self.mcu.faderPos(6, monitorFaderValue )
-        self.mcu.faderPos(7, mainFaderValue )
+        mainFaderValue = self.motu.getMainFader("midi")
+        monitorFaderValue = self.motu.getMonitorFader("midi")
 
-        self.mcu.l1Led(7, not self.motu.getMonitorMute())
-        self.mcu.l1Led(8, not self.motu.getMainMute())
+        self.mcu.resetController()
+
+        if self.mcu.getMode() is "main":
+            self.mcu.faderPos(6, monitorFaderValue)
+            self.mcu.faderPos(7, mainFaderValue)
+
+            self.mcu.l1Led(7, not self.motu.getMonitorMute())
+            self.mcu.l1Led(8, not self.motu.getMainMute())
+        elif self.mcu.getMode() is "mixing":
+            for ch in range(0, 8):
+                solo = self.motu.getSolo(ch)
+                mute = self.motu.getMute(ch)
+                fader = self.motu.getFader(ch, "midi")
+                self.mcu.l1Led(ch, solo)
+                self.mcu.l2Led(ch, mute)
+                self.mcu.faderPos(ch, fader)
 
 
 if __name__ == "__main__":

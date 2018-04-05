@@ -4,6 +4,10 @@ This program will allow interaction with the motu
 import json
 import requests
 
+from modules.midiHelper import *
+
+fader_api_range = [0, 4]
+fader_midi_range = [-8192, 8176]
 
 class Motu:
 
@@ -121,12 +125,17 @@ class Motu:
         values = { "value": fader}
         return self._query(address, values)
 
-    def getFader(self, ch):
+    def getFader(self, ch, datatype="api"):
         """
         Get fader of a given channel
         """
         address = "/mix/chan/{}/matrix/fader".format(ch)
-        return self._get(address)
+        fader = self._get(address)
+        if datatype is "midi":
+            return convertValueToMidiRange(fader["value"], fader_api_range, fader_midi_range)
+        else:
+            return fader["value"]
+
 
     ###################################################
     def setMainFader(self, fader):
@@ -137,13 +146,17 @@ class Motu:
         values = {"value": fader}
         return self._query(address, values)
  
-    def getMainFader(self):
+    def getMainFader(self, datatype="api"):
         """
         Get fader of a main 
         """
         address = "/mix/main/{}/matrix/fader".format(0)
         fader = self._get(address)
-        return fader["value"]
+
+        if datatype is "midi":
+            return convertValueToMidiRange(fader["value"], fader_api_range, fader_midi_range)
+        else:
+            return fader["value"]
 
     def setMonitorFader(self, fader):
         """
@@ -153,13 +166,16 @@ class Motu:
         values = {"value": fader}
         return self._query(address, values)
 
-    def getMonitorFader(self):
+    def getMonitorFader(self, datatype="api"):
         """
         Get fader of a monitor
         """
         address = "/mix/monitor/{}/matrix/fader".format(0)
         fader = self._get(address)
-        return fader["value"]
+        if datatype is "midi":
+            return convertValueToMidiRange(fader["value"], fader_api_range, fader_midi_range)
+        else:
+            return fader["value"]
 
     ###################################################
     def setPan(self, ch, pan):
