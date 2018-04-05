@@ -25,7 +25,7 @@ class Setup:
 
         msg = self.midiIN.receive()
         while msg:
-            if msg.type == "control_change" :
+            if msg.type == "control_change":
                 direction = 1 if msg.value == 1 else -1
                 potId = vPotCC.index(msg.control)
 
