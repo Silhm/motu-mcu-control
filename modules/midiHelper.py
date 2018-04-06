@@ -52,7 +52,7 @@ def convertValueToMidiRange(oscValue, oscRange, midiRange):
     minMidi = midiRange[0]
     maxMidi = midiRange[1]
 
-    percent = (oscValue - minOSC ) / (maxOSC-minOSC) * 100.0
+    percent = (oscValue - minOSC) / (maxOSC-minOSC) * 100.0
     midiVal = (maxMidi - minMidi) * percent / 100 + minMidi
 
     return int(midiVal)
@@ -65,6 +65,11 @@ def convertValueToOSCRange(midiValue, oscRange, midiRange, scale="linear"):
     midiRange
     """
     print("scale {}".format(scale))
+    #  midi    API   decibels      midirange ++
+    #  8000 ->  4     +12dB         16000
+    #  4000 ->  1       0db
+    # -8000 ->  0     -12dB          0
+
 
     minOSC = oscRange[0]
     maxOSC = oscRange[1]

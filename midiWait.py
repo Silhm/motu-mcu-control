@@ -2,6 +2,7 @@
 This program handle MIDI from an MCU midi controller and create event to send to the mixer
 """
 import argparse
+import math
 import json
 
 import requests 
@@ -61,18 +62,18 @@ class MidiWait:
         print("midiIN {}:".format(midiMessage))
         # Faders
         if midiMessage.type == "pitchwheel":
-            self._handlePitchWheel(midiMessage.channel, midiMessage.pitch)
+            self._handlePitchWheel(midiMessage.channel + 1, midiMessage.pitch)
 
         # vPots
-        if midiMessage.type == "control_change" :
+        if midiMessage.type == "control_change":
             self._handleVpotRot(midiMessage.control, midiMessage.value)
             
-        if midiMessage.type == "note_on" and midiMessage.velocity == 127 :
+        if midiMessage.type == "note_on" and midiMessage.velocity == 127:
             soloMidiNotes = ["E0", "F0", "F#0", "G0", "G#0", "A0", "A#0", "B0"]
             muteMidiNotes = ["C1", "C#1", "D1", "D#1", "E1", "F1", "F#1", "G1"]
             vPotMidiNotes = ["G#1", "A1", "A#1", "B1", "C2", "C#2", "D2", "D#2"]
-            bankMidiNotes = ["A#2","B2"]
-            functionMidiNotes = ["G2","G#2","F2","F#2","G6","A6","G#6","A#6"]
+            bankMidiNotes = ["A#2", "B2"]
+            functionMidiNotes = ["G2", "G#2", "F2", "F#2", "G6", "A6", "G#6", "A#6"]
             midiFullNote = midiNumberToFullNote(midiMessage.note)
             
             # Solo
@@ -98,13 +99,12 @@ class MidiWait:
             # Function buttons 
             if midiFullNote in functionMidiNotes:
                 f = functionMidiNotes.index(midiFullNote)
-                self._handleFunctionButton(f)
+                self._handleFunctionButton(f+1)
 
             # Encoder groups : only 2 of 4 are working... need investigation
             # Top right
             if midiFullNote in ["A#4", "D#3"]:
                 self._handleEncoderGrpButtons(midiFullNote)
-
 
     def read(self):
         """
@@ -129,15 +129,15 @@ class MidiWait:
         """
         Handle the function Buttons F1 -> F8    
         """
-        print("Button F{} clicked".format(fNum+1))
+        print("Button F{} clicked".format(fNum))
         # get previous know state and toggle it
         fState = self.settings.getFunction(fNum)
 
-        if fNum == 7:
+        if fNum == 8:
             self.motu.dim(fState)
-            fState = self.settings.setFunction(fNum,not fState)
+            fState = self.settings.setFunction(fNum, not fState)
             # update led on button
-            self.mcu.fLed(8,fState)
+            self.mcu.fLed(8, fState)
 
     def _handleBankButton(self, up):
         """
@@ -184,9 +184,9 @@ class MidiWait:
  
         newPos = 0
         address = "/mix/chan/{}/matrix/pan".format(ch)
-        values = { "value":newPos}
+        values = {"value": newPos}
         self.sendQueryMessage(address, values)
-        self.settings.setVpotPos(ch,newPos)
+        self.settings.setVpotPos(ch, newPos)
 
     def _handleVpotRot(self, cc, value):
         """
@@ -194,6 +194,7 @@ class MidiWait:
         TODO: speed
         """
         vPotCC = [16, 17, 18, 19, 20, 21, 22, 23]
+        ch = 0
         
         if cc in vPotCC:
             ch = vPotCC.index(cc) 
