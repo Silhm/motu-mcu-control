@@ -65,20 +65,31 @@ def convertValueToOSCRange(midiValue, oscRange, midiRange, scale="linear"):
     midiRange
     """
     print("scale {}".format(scale))
-    #  midi    API   decibels      midirange ++
-    #  8000 ->  4     +12dB         16000
-    #  4000 ->  1       0db
-    # -8000 ->  0     -12dB          0
-
+    #  midi    API   decibels
+    #  8000 ->  4     +12dB      20log(4)
+    #  4000 ->  1       0db      20log(1)
+    # -8000 ->  0     -12dB      20log(0.001)  #log(0) is -inf
 
     minOSC = oscRange[0]
     maxOSC = oscRange[1]
 
     minMidi = midiRange[0]
     maxMidi = midiRange[1]
-
-    percent = (midiValue - minMidi) / (maxMidi-minMidi) * 100.0
+    percent = (midiValue - minMidi) / (maxMidi - minMidi) * 100.0
     oscVal = (maxOSC - minOSC) * percent / 100 + minOSC
+
+    if scale is "log":
+        # analyze https://stackoverflow.com/questions/846221/logarithmic-slider#846249
+        # and : https: // www.image - line.com / support / FLHelp / html / mixer_dB.htm
+        """
+        minOSC = math.log(minOSC)
+        maxOSC = math.log(maxOSC)
+        # calculate adjustment factor
+        sc = (maxOSC - minOSC) / (maxMidi - minMidi)
+        oscVal = math.exp(minOSC + sc*(midiValue-minMidi))
+        """
+        oscVal = 20 * math.log(oscVal)
+
 
     print(" PITCH = {}  >>  VAL = {}".format(midiValue, oscVal))
     return oscVal
