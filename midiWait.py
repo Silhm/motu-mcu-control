@@ -59,10 +59,10 @@ class MidiWait:
         Route the message to corresponding function
         :param midiMessage:
         """
-        print("midiIN {}:".format(midiMessage))
+        # print("midiIN {}:".format(midiMessage))
         # Faders
         if midiMessage.type == "pitchwheel":
-            self._handlePitchWheel(midiMessage.channel + 1, midiMessage.pitch)
+            self._handlePitchWheel(midiMessage.channel, midiMessage.pitch)
 
         # vPots
         if midiMessage.type == "control_change":
@@ -75,20 +75,20 @@ class MidiWait:
             bankMidiNotes = ["A#2", "B2"]
             functionMidiNotes = ["G2", "G#2", "F2", "F#2", "G6", "A6", "G#6", "A#6"]
             midiFullNote = midiNumberToFullNote(midiMessage.note)
-            
+
             # Solo
             if midiFullNote in soloMidiNotes:
-                ch = soloMidiNotes.index(midiFullNote) + 1
+                ch = soloMidiNotes.index(midiFullNote)
                 self._handleSoloButton(ch)
 
             # Mute
             if midiFullNote in muteMidiNotes:
-                ch  = muteMidiNotes.index(midiFullNote) + 1
+                ch = muteMidiNotes.index(midiFullNote)
                 self._handleMuteButton(ch)
 
             # vPots click
             if midiFullNote in vPotMidiNotes:
-                ch  = vPotMidiNotes.index(midiFullNote) + 1
+                ch = vPotMidiNotes.index(midiFullNote)
                 self._handleVpotClick(ch)
 
             # Bank buttons 
@@ -99,7 +99,7 @@ class MidiWait:
             # Function buttons 
             if midiFullNote in functionMidiNotes:
                 f = functionMidiNotes.index(midiFullNote)
-                self._handleFunctionButton(f+1)
+                self._handleFunctionButton(f)
 
             # Encoder groups : only 2 of 4 are working... need investigation
             # Top right
@@ -118,7 +118,7 @@ class MidiWait:
         """
         Handle the Encoder groups button to change mode (only top and bottom right)
         """
-        print(self.mcu.getMode())
+        print("encoder group note {}", note)
         if note == "A#4":
             self.mcu.setMode("main")
         elif note == "D#3":
@@ -133,11 +133,13 @@ class MidiWait:
         # get previous know state and toggle it
         fState = self.settings.getFunction(fNum)
 
-        if fNum == 8:
-            self.motu.dim(fState)
+        if fNum == 7:
+            self.motu.dim(not fState)
             fState = self.settings.setFunction(fNum, not fState)
             # update led on button
-            self.mcu.fLed(8, fState)
+            self.mcu.fLed(7, fState)
+            mainFaderValue = self.motu.getMainFader("midi")
+            self.mcu.faderPos(7, mainFaderValue)
 
     def _handleBankButton(self, up):
         """
@@ -165,7 +167,7 @@ class MidiWait:
         apiRange = [0, 4]
         midiRange = [-8192, 8176]
         
-        faderValue = convertValueToOSCRange(value, apiRange, midiRange)
+        faderValue = convertValueToOSCRange(value, apiRange, midiRange, "log")
         # todo : log scale?    
 
         if ch is 7:  # and mode is monito!
@@ -232,16 +234,16 @@ class MidiWait:
         mcuMode = self.mcu.getMode()
         print("mcuMode : {}", format(mcuMode))
         if mcuMode is "main":
-            if ch == 7: 
+            if ch == 6:
                 # monitoring toggle
                 mute = self.motu.getMonitorMute()
                 m = self.motu.muteMonitor(not mute)
-                self.mcu.l1Led(7, not m)
-            if ch == 8: 
+                self.mcu.l1Led(6, not m)
+            if ch == 7:
                 # main toggle
                 mute = self.motu.getMainMute()
                 m=self.motu.muteMain(not mute)
-                self.mcu.l1Led(8, not m)
+                self.mcu.l1Led(7, not m)
 
         else:
             solo = self.settings.getSolo(ch)
@@ -282,8 +284,9 @@ class MidiWait:
             self.mcu.faderPos(6, monitorFaderValue)
             self.mcu.faderPos(7, mainFaderValue)
 
-            self.mcu.l1Led(7, not self.motu.getMonitorMute())
-            self.mcu.l1Led(8, not self.motu.getMainMute())
+            self.mcu.l1Led(6, not self.motu.getMonitorMute())
+            self.mcu.l1Led(7, not self.motu.getMainMute())
+
         elif self.mcu.getMode() is "mixing":
             for ch in range(0, 8):
                 solo = self.motu.getSolo(ch)

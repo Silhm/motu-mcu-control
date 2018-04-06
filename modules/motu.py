@@ -132,7 +132,7 @@ class Motu:
         address = "/mix/chan/{}/matrix/fader".format(ch)
         fader = self._get(address)
         if datatype is "midi":
-            return convertValueToMidiRange(fader["value"], fader_api_range, fader_midi_range)
+            return convertValueToMidiRange(fader["value"], fader_api_range, fader_midi_range, "log")
         else:
             return fader["value"]
 
@@ -154,7 +154,7 @@ class Motu:
         fader = self._get(address)
 
         if datatype is "midi":
-            return convertValueToMidiRange(fader["value"], fader_api_range, fader_midi_range)
+            return convertValueToMidiRange(fader["value"], fader_api_range, fader_midi_range, "log")
         else:
             return fader["value"]
 
@@ -173,7 +173,7 @@ class Motu:
         address = "/mix/monitor/{}/matrix/fader".format(0)
         fader = self._get(address)
         if datatype is "midi":
-            return convertValueToMidiRange(fader["value"], fader_api_range, fader_midi_range)
+            return convertValueToMidiRange(fader["value"], fader_api_range, fader_midi_range, "log")
         else:
             return fader["value"]
 
@@ -303,6 +303,7 @@ class Motu:
 
         if status:
             print("TODO: apply 20db dim on main fader")
+            self.setMainFader(0.1)
         else:
             # revert to 0dB
             self.setMainFader(1)

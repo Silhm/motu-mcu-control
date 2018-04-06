@@ -40,7 +40,7 @@ def midiFullNoteToNumber(fullNote):
         return int(midiNoteToNumber(str(m.group(1)), float(m.group(2))))
 
 
-def convertValueToMidiRange(oscValue, oscRange, midiRange):
+def convertValueToMidiRange(oscValue, oscRange, midiRange, scale="linear"):
     """
     value : OSC value
     OscRange: 
@@ -54,6 +54,25 @@ def convertValueToMidiRange(oscValue, oscRange, midiRange):
 
     percent = (oscValue - minOSC) / (maxOSC-minOSC) * 100.0
     midiVal = (maxMidi - minMidi) * percent / 100 + minMidi
+
+    if scale is "log":
+        minOSC = math.log(minOSC + 0.001)
+        maxOSC = math.log(maxOSC + 0.001)
+        """
+        # analyze https://stackoverflow.com/questions/846221/logarithmic-slider#846249
+        # and : https://www.image-line.com/support/FLHelp/html/mixer_dB.htm
+        minOSC = math.log(minOSC+0.001)
+        maxOSC = math.log(maxOSC)
+        # calculate adjustment factor
+        sc = (maxOSC - minOSC) / (maxMidi - minMidi)
+        midiVal = int(math.exp(minOSC + sc*(oscValue-minMidi)))
+        """
+        dbVal = 20 * math.log(oscValue+0.001)
+        scale = (maxOSC - minOSC) / (maxMidi - minMidi)
+        midiVal = (math.log(oscValue+0.001) - minOSC) / scale + minMidi
+
+        # expected ~5500 pitch
+        # print(" PITCH = {}  >>  VAL = {}  ({} dB)".format(midiVal, oscValue, dbVal))
 
     return int(midiVal)
 
@@ -75,21 +94,19 @@ def convertValueToOSCRange(midiValue, oscRange, midiRange, scale="linear"):
 
     minMidi = midiRange[0]
     maxMidi = midiRange[1]
+
     percent = (midiValue - minMidi) / (maxMidi - minMidi) * 100.0
     oscVal = (maxOSC - minOSC) * percent / 100 + minOSC
 
     if scale is "log":
         # analyze https://stackoverflow.com/questions/846221/logarithmic-slider#846249
-        # and : https: // www.image - line.com / support / FLHelp / html / mixer_dB.htm
-        """
-        minOSC = math.log(minOSC)
+        # and : https://www.image-line.com/support/FLHelp/html/mixer_dB.htm
+        minOSC = math.log(minOSC+0.001)
         maxOSC = math.log(maxOSC)
         # calculate adjustment factor
         sc = (maxOSC - minOSC) / (maxMidi - minMidi)
         oscVal = math.exp(minOSC + sc*(midiValue-minMidi))
-        """
-        oscVal = 20 * math.log(oscVal)
+        dbVal = 20 * math.log(oscVal+0.001)
 
-
-    print(" PITCH = {}  >>  VAL = {}".format(midiValue, oscVal))
+    print(" PITCH = {}  >>  VAL = {} ({} dB)".format(midiValue, oscVal, dbVal))
     return oscVal

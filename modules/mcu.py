@@ -29,8 +29,9 @@ class MCU:
                 # "unknown": "A#2"
         }
         note = midiFullNoteToNumber(modeNotes[mode])
-        
-        # first, turn off all leds
+
+        print("  *** Setting {} mode (note {}) ***".format(mode, note))
+        # first, turn off all encoder group leds
         self.midiOUT.send(mido.Message("note_on", note=70, velocity=0))
         self.midiOUT.send(mido.Message("note_on", note=51, velocity=0))
 
@@ -48,29 +49,30 @@ class MCU:
         from 1 to 8
         """
         functionMidiNotes = ["G#2", "G2", "F#2", "F2", "G6", "G#6", "A6", "A#6"]
-        note = midiFullNoteToNumber(functionMidiNotes[fId-1])
+        note = midiFullNoteToNumber(functionMidiNotes[fId])
         msg = mido.Message("note_on", note=note, velocity=127 if status else 0)
         self.midiOUT.send(msg)
-        print("led {}: {}".format(fId, functionMidiNotes[fId-1]))
-        print(msg)
+        # print("F{} led: {}".format(fId, status))
 
     def l1Led(self, fId, status):
         """
         from 1 to 8
         """
         l1MidiNotes =["E0", "F0", "F#0", "G0", "G#0", "A0", "A#0", "B0"]
-        note = midiFullNoteToNumber(l1MidiNotes[fId-1])
+        note = midiFullNoteToNumber(l1MidiNotes[fId])
         msg = mido.Message("note_on", note=note, velocity=127 if status else 0)
         self.midiOUT.send(msg)
+        # print("L1 LED{} : {}".format(fId, status))
 
     def l2Led(self, fId,status):
         """
         from 1 to 8
         """
         l2MidiNotes = ["C1", "C#1", "D1", "D#1", "E1", "F1", "F#1", "G1"]
-        note = midiFullNoteToNumber(l2MidiNotes[fId-1])
+        note = midiFullNoteToNumber(l2MidiNotes[fId])
         msg = mido.Message("note_on", note=note, velocity=127 if status else 0)
         self.midiOUT.send(msg)
+        # print("L2 LED{} : {}".format(fId, status))
 
     def vPotRing(self, vPotId, value, mode):
         """
@@ -105,7 +107,7 @@ class MCU:
 
         print("vPot {}:{}  bytes[{}]   valToSend: {}".format(vPotId,value, bytesVal, ccValue))
 
-        cc = list(range(48, 56))[vPotId-1]
+        cc = list(range(48, 56))[vPotId]
         
         msg = mido.Message('control_change',  control=cc, value=ccValue)
         self.midiOUT.send(msg)
