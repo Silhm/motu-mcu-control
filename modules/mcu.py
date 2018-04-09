@@ -6,6 +6,8 @@ from modules.midiHelper import *
 fader_api_range = [0, 4]
 fader_midi_range = [-8192, 8176]
 
+strips_count = 8
+
 class MCU:
     def __init__(self):
         inPort = mido.get_input_names()[0]
@@ -37,6 +39,13 @@ class MCU:
 
         # then, light on the good one!
         self.midiOUT.send(mido.Message("note_on", note=note, velocity=127))
+
+        if mode is "mixing":
+            self.midiOUT.send(mido.Message.from_hex('B0 4B 0D'))
+            self.midiOUT.send(mido.Message.from_hex('B0 4A 2F'))
+        elif mode is "main":
+            self.midiOUT.send(mido.Message.from_hex('B0 4B 0F'))
+            self.midiOUT.send(mido.Message.from_hex('B0 4A 14'))
 
     def getMode(self):
         """

@@ -7,6 +7,7 @@ import time
 import sys
 
 from modules.midiHelper import *
+from modules.settings import Settings
 
 fader_api_range = [0, 4]
 fader_midi_range = [-8192, 8176]
@@ -21,13 +22,15 @@ class Motu:
         self.uid = self._getUid()
         self.waitOnline()
 
-        self.settings = self._getSettings()
+        self.motuSettings = self._getSettings()
+        self.settings = Settings()
 
-        if self.settings:
+
+        if self.motuSettings:
             print("========== Motu AVB: ===========")
-            print("* Name        : {}".format(self.settings["hostname"]))
+            print("* Name        : {}".format(self.motuSettings["hostname"]))
             print("* uid         : {}".format(self.uid))
-            print("* Sample rate : {}".format(self.settings["cfg/0/current_sampling_rate"]))
+            print("* Sample rate : {}".format(self.motuSettings["cfg/0/current_sampling_rate"]))
             print("================================")
 
     def _query(self, address, value):
@@ -40,8 +43,8 @@ class Motu:
         value = json.dumps(value)
         url = "{}/datastore{}".format(self.url, address)
         r = requests.post(url, {"json": value})
-        print(url)    
-        print(r)    
+        print("{} : {}".format(url, value))
+
         return True if r.status_code is 200 else False
 
     def _get(self, address):

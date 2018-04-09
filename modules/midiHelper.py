@@ -83,7 +83,6 @@ def convertValueToOSCRange(midiValue, oscRange, midiRange, scale="linear"):
     OscRange: 
     midiRange
     """
-    print("scale {}".format(scale))
     #  midi    API   decibels
     #  8000 ->  4     +12dB      20log(4)
     #  4000 ->  1       0db      20log(1)
@@ -108,7 +107,7 @@ def convertValueToOSCRange(midiValue, oscRange, midiRange, scale="linear"):
         oscVal = math.exp(minOSC + sc*(midiValue-minMidi))
         dbVal = 20 * math.log(oscVal+0.001)
 
-    print(" PITCH = {}  >>  VAL = {} ({} dB)".format(midiValue, oscVal, dbVal))
+    # print(" PITCH = {}  >>  VAL = {} ({} dB)".format(midiValue, oscVal, dbVal))
     return oscVal
 
 

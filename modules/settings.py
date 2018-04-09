@@ -1,6 +1,7 @@
 import shelve
 from modules.midiHelper import *
 
+
 class Settings:
     """
     Class to handle settings to keep in memory
@@ -14,7 +15,7 @@ class Settings:
         self.function = [False]*8
         self.bank = 0
 
-        self._db = shelve.open("config")
+        self._db = shelve.open("config.db")
 
     def _store(self, key, val):
         self._db[key] = val
@@ -23,9 +24,11 @@ class Settings:
         return self._db[key]
 
     def restoreDefault(self):
+        self.setMcuMode("main")
         self.setStripCount(8)
         self.setFlipMode(False)
         self.setDimValue(-20)
+
 
     # fader
     def setFaderPos(self, ch, val):
@@ -70,20 +73,29 @@ class Settings:
     def getFunction(self, fId):
         return self.function[fId]
 
+    def setMcuMode(self, mode):
+        """
+        Set the mcu mode
+        :return:
+        """
+        self._store("mcumode", mode)
+
+    def getMcuMode(self):
+        return self._recall("mcumode")
 
     def setStripCount(self, count):
         """
         Get the number of strip available
         :return:
         """
-        self._stripCount = count
+        self._store("stripCount", count)
 
     def getStripCount(self):
         """
         Get the number of strip available
         :return:
         """
-        return self._stripCount
+        return self._recall("stripCount")
 
     # flipMode
     def setFlipMode(self, flip):

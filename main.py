@@ -57,11 +57,11 @@ class MidiWait:
         """
         value = json.dumps(value)
         url = "{}/datastore{}".format(self.mixerUrl, address)
-        print("{} {}".format(url, value))
 
         r = requests.post(url, {"json": value})
+        print("[{}] {} {}".format(r.status_code, url, value))
         # print(">Query [{}] {}  {} with data {}".format(r.status_code,self.mixerUrl, address,value))
-        print("{}".format(r))
+        #print("{}".format(r))
 
     def routeMessage(self, midiMessage):
         """
@@ -164,20 +164,22 @@ class MidiWait:
         Handle fader moves
         """
         self.settings.setFaderPos(ch, value)
+        # TODO handle banking
 
         apiRange = [0, 4]
         midiRange = [-8192, 8176]
 
         faderValue = convertValueToOSCRange(value, apiRange, midiRange, "log")
-        # todo : log scale?
 
-        if ch is 7:  # and mode is monito!
-            self.motu.setMainFader(faderValue)
-        elif ch is 6:  # and mode is monito!
-            self.motu.setMonitorFader(faderValue)
+        if self.mcu.getMode() is "main":
+            if ch is 7:  # and mode is monito!
+                self.motu.setMainFader(faderValue)
+            elif ch is 6:  # and mode is monito!
+                self.motu.setMonitorFader(faderValue)
         else:
             self.motu.setFader(ch, faderValue)
 
+        # use this to save fader pos on mcu
         self.mcu.faderPos(ch, value)
 
     def _handleVpotClick(self, ch):
@@ -233,7 +235,6 @@ class MidiWait:
         """
         # get motu state and toggle it
         mcuMode = self.mcu.getMode()
-        print("mcuMode : {}", format(mcuMode))
         if mcuMode is "main":
             if ch == 6:
                 # monitoring toggle
@@ -249,12 +250,10 @@ class MidiWait:
         else:
             solo = self.settings.getSolo(ch)
             address = "/mix/chan/{}/matrix/solo".format(ch)
-
             newStatus = not solo
-
-            values = {"value": newStatus}
+            values = {"value": 1 if newStatus else 0}
             self.sendQueryMessage(address, values)
-
+            self.mcu.l1Led(ch, newStatus)
             self.settings.setSolo(ch, newStatus)
 
     def _handleMuteButton(self, ch):
@@ -267,9 +266,9 @@ class MidiWait:
 
         newStatus = not mute
 
-        values = {"value": newStatus}
+        values = {"value": 1 if newStatus else 0}
         self.sendQueryMessage(address, values)
-
+        self.mcu.l2Led(ch, newStatus)
         self.settings.setMute(ch, newStatus)
 
     def recall(self):
@@ -289,13 +288,14 @@ class MidiWait:
             self.mcu.l1Led(7, not self.motu.getMainMute())
 
         elif self.mcu.getMode() is "mixing":
-            for ch in range(0, 8):
+            for ch in range(0, self.settings.getStripCount()):
                 solo = self.motu.getSolo(ch)
                 mute = self.motu.getMute(ch)
                 fader = self.motu.getFader(ch, "midi")
                 self.mcu.l1Led(ch, solo)
                 self.mcu.l2Led(ch, mute)
                 self.mcu.faderPos(ch, fader)
+                print("[{}] Solo:{}  Mute:{}  fader:{}".format(ch, solo, mute, fader))
 
 
 if __name__ == "__main__":
