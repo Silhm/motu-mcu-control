@@ -15,12 +15,22 @@ It can be placed on your computer or on a RaspberryPi like computer board.
 - That's it!
 - Faders should move to their corresponding positions and active outputs should be lighted.
 
+## Features (availables)
+* Choose between output mode, or mixer mode by using buttons (encoder group buttons)
+* Control outputs (output mode): 
+* * Headphones, with faders, select to enable
+* * Main output, with faders, select to enable
+* * Dim Main output by clicking on F8 button (apply -20dB on main)
+* Control inputs from strip 1 to 8 (mixer mode):
+* * Solo, mute, Pan (no feedback yet) and fader
+
 ## TODO
 * Handle different modes (Mixer, Outputs/Groups, Sends, Effects)
 * Handle banks to use multiple layers of fader if more than 8 channels
 * Handle the send mode:
 * * Using already defined personal send vues
 * * Selecting a send output, then selecting all desired strips to add to the vue
+* Change dim value by keeping dim button down and use vpot to set it up
 * Handle flip mode (invert fader and rotary vPot)
 * Add a mute all / unmute all
 * Add a clear solo button
