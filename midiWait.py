@@ -38,7 +38,8 @@ class MidiWait:
         """
         Set up the bridge
         """
-        self.hwSetup.setupInterface()
+        self.settings.restoreDefault()
+        #self.hwSetup.setupInterface()
 
     def sendQueryMessage(self, address, value):
         """

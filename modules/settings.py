@@ -1,5 +1,10 @@
+import shelve
+from modules.midiHelper import *
 
 class Settings:
+    """
+    Class to handle settings to keep in memory
+    """
 
     def __init__(self):
         self.faderPos = [0]*8
@@ -9,10 +14,23 @@ class Settings:
         self.function = [False]*8
         self.bank = 0
 
+        self._db = shelve.open("config")
+
+    def _store(self, key, val):
+        self._db[key] = val
+
+    def _recall(self, key):
+        return self._db[key]
+
+    def restoreDefault(self):
+        self.setStripCount(8)
+        self.setFlipMode(False)
+        self.setDimValue(-20)
+
     # fader
     def setFaderPos(self, ch, val):
         self.faderPos[ch] = val
-    
+
     def getFaderPos(self, ch):
         return self.faderPos[ch]
 
@@ -52,4 +70,56 @@ class Settings:
     def getFunction(self, fId):
         return self.function[fId]
 
+
+    def setStripCount(self, count):
+        """
+        Get the number of strip available
+        :return:
+        """
+        self._stripCount = count
+
+    def getStripCount(self):
+        """
+        Get the number of strip available
+        :return:
+        """
+        return self._stripCount
+
+    # flipMode
+    def setFlipMode(self, flip):
+        """
+        Flip mode to reverse vPot and faders
+        :param flip:
+        :return:
+        """
+        self._store("flipMode", flip)
+
+
+    def getFlipMode(self):
+        """
+        Know if flipmode is activated
+        :return:
+        """
+        return self._recall("flipMode")
+
+
+    # dim values
+    def setDimValue(self, gain):
+        """
+        How much gain should be applied when pressing dim button
+        :param gain: in db
+        :return:
+        """
+        self._store("dimValue", gain)
+
+    def getDimValue(self, datatype="db"):
+        """
+        How much gain should be applied when pressing dim button
+        :return gain: in dB
+        """
+        gain = self._recall("dimValue")
+        if datatype is "api":
+            gain = convertDecibelToAPI(gain)
+
+        return gain
 

@@ -110,3 +110,9 @@ def convertValueToOSCRange(midiValue, oscRange, midiRange, scale="linear"):
 
     print(" PITCH = {}  >>  VAL = {} ({} dB)".format(midiValue, oscVal, dbVal))
     return oscVal
+
+
+
+def convertDecibelToAPI(db):
+    value = math.pow(10, (db/20))
+    return value

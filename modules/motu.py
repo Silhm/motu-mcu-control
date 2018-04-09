@@ -37,7 +37,7 @@ class Motu:
         """
         value = json.dumps(value)
         url = "{}/datastore{}".format(self.url, address)
-        r = requests.post(url, {"json":value})
+        r = requests.post(url, {"json": value})
         print(url)    
         print(r)    
         return True if r.status_code is 200 else False
@@ -98,6 +98,15 @@ class Motu:
         mute = self._get(address)
         return bool(mute["value"])
 
+    def muteAll(self, mute):
+        """
+        Mute / Unmute all strips
+        :param mute: true to mute all, false otherwise
+        :return:
+        """
+        for ch in range(0, self.settings.getStripCount()):
+            self.setMute(ch, mute)
+
     ###################################################
     def setGain(self, ch, gain):
         """
@@ -153,10 +162,13 @@ class Motu:
         address = "/mix/main/{}/matrix/fader".format(0)
         fader = self._get(address)
 
-        if datatype is "midi":
-            return convertValueToMidiRange(fader["value"], fader_api_range, fader_midi_range, "log")
+        if fader:
+            if datatype is "midi":
+                return convertValueToMidiRange(fader["value"], fader_api_range, fader_midi_range, "log")
+            else:
+                return fader["value"]
         else:
-            return fader["value"]
+            return False
 
     def setMonitorFader(self, fader):
         """
@@ -172,10 +184,13 @@ class Motu:
         """
         address = "/mix/monitor/{}/matrix/fader".format(0)
         fader = self._get(address)
-        if datatype is "midi":
-            return convertValueToMidiRange(fader["value"], fader_api_range, fader_midi_range, "log")
+        if fader:
+            if datatype is "midi":
+                return convertValueToMidiRange(fader["value"], fader_api_range, fader_midi_range, "log")
+            else:
+                return fader["value"]
         else:
-            return fader["value"]
+            return False
 
     ###################################################
     def setPan(self, ch, pan):
@@ -207,18 +222,18 @@ class Motu:
         print("TODO set EQ")
 
         eq = {
-            "hpf":{
+            "hpf": {
                 "enabled": True,
                 "freq": 40
             },
-            "lowShelf":{
+            "lowShelf": {
                 "enabled": True,
                 "freq": 80,
                 "gain": 0,
                 "bw": 1,
                 "mode": 0
             },
-            "mid1":{
+            "mid1": {
                 "enabled": True,
                 "freq": 800,
                 "gain": 0,
@@ -230,7 +245,7 @@ class Motu:
                 "gain": 0,
                 "bw": 1,
             },
-            "highShelf":{
+            "highShelf": {
                 "enabled": True,
                 "freq": 18000,
                 "gain": 0,
@@ -275,7 +290,7 @@ class Motu:
         """
         address = "/mix/main/{}/matrix/mute".format(0)
         mute = self._get(address)
-        return bool(mute["value"])
+        return bool(mute["value"] if mute else False)
 
     def muteMonitor(self, mute):
         """
@@ -292,18 +307,16 @@ class Motu:
         """
         address = "/mix/monitor/{}/matrix/mute".format(0)
         mute = self._get(address)
-        return bool(mute["value"])
+        return bool(mute["value"] if mute else False)
 
     def dim(self, status):
         """
         Apply -20dB on current master value
         """
-        mainFader = self.getMainFader()
-        print("main Fader {}".format(mainFader))
+        gain = self.settings.getDimValue("api")
 
         if status:
-            print("TODO: apply 20db dim on main fader")
-            self.setMainFader(0.1)
+            self.setMainFader(gain)
         else:
             # revert to 0dB
             self.setMainFader(1)
