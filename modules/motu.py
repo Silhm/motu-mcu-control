@@ -3,6 +3,8 @@ This program will allow interaction with the motu
 """
 import json
 import requests
+import time
+import sys
 
 from modules.midiHelper import *
 
@@ -14,9 +16,11 @@ class Motu:
     def __init__(self, ipAddr=None, port=80):
         self.ipAddr = ipAddr
         self.port = port 
-        self.url = "http://{}:{}".format(ipAddr,port)
+        self.url = "http://{}:{}".format(ipAddr, port)
        
         self.uid = self._getUid()
+        self.waitOnline()
+
         self.settings = self._getSettings()
 
         if self.settings:
@@ -25,8 +29,6 @@ class Motu:
             print("* uid         : {}".format(self.uid))
             print("* Sample rate : {}".format(self.settings["cfg/0/current_sampling_rate"]))
             print("================================")
-        else:    
-            print("No Motu soundcard found")
 
     def _query(self, address, value):
         """
@@ -63,6 +65,21 @@ class Motu:
         """
         settings = self._get("/avb/{}/".format(self.uid))
         return settings
+
+    def isOnline(self):
+        return self._getUid()
+
+    def waitOnline(self, timeout=10):
+        cpt = 0
+        while not self.isOnline():
+            cpt = cpt + 1
+            message = "Motu not online or unreachable, trying again ({})".format(cpt)
+            sys.stdout.write("\r\x1b[K" + message.__str__())
+            sys.stdout.flush()
+            time.sleep(1)
+            if cpt == timeout:
+                print("\n Please verify that the soundCard is reachable on the network at {}".format(self.url))
+                quit(404)
 
     ###################################################
     def setSolo(self, ch, solo):
