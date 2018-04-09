@@ -15,7 +15,7 @@ It can be placed on your computer or on a RaspberryPi like computer board.
 - That's it!
 - Faders should move to their corresponding positions and active outputs should be lighted.
 
-## Features (availables)
+## Features (available)
 * Choose between output mode, or mixer mode by using buttons (encoder group buttons)
 * Control outputs (output mode): 
 * * Headphones, with faders, select to enable
