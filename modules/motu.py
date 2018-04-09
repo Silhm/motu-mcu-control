@@ -98,6 +98,14 @@ class Motu:
         solo = self._get(address)
         return bool(solo["value"])
 
+    def clearSolo(self):
+        """
+        Remove all solo status of the strips
+        :return:
+       """
+        for ch in range(0, self.settings.getStripCount()):
+            self.setSolo(ch, False)
+
     ###################################################
     def setMute(self, ch, mute):
         """
@@ -338,3 +346,11 @@ class Motu:
             # revert to 0dB
             self.setMainFader(1)
 
+    def getTrackName(self, ch):
+        """
+        Get the track name of a given channel
+        :param ch:
+        :return:
+        """
+        # TODO
+        return "Track {}".format(ch)
