@@ -16,16 +16,16 @@ It can be placed on your computer or on a RaspberryPi like computer board.
 - Faders should move to their corresponding positions and active outputs should be lighted.
 
 ## Features (available)
-* Choose between output mode, or mixer mode by using buttons (encoder group buttons)
+* Choose between output mode, or mixer mode by using buttons (encoder group buttons) (displays the mode on the assign 7segments screen)
 * Control outputs (output mode): 
 * * Headphones, with faders, select to enable
 * * Main output, with faders, select to enable
 * * Dim Main output by clicking on F8 button (apply -20dB on main)
 * Control inputs from strip 1 to 8 (mixer mode):
 * * Solo, mute, Pan (no feedback yet) and fader
+* Store settings in a database
 
 ## TODO
-* Handle different modes (Mixer, Outputs/Groups, Sends, Effects)
 * Handle banks to use multiple layers of fader if more than 8 channels
 * Handle the send mode:
 * * Using already defined personal send vues
@@ -36,7 +36,6 @@ It can be placed on your computer or on a RaspberryPi like computer board.
 * Add a clear solo button
 * Handle MCU extension for larger setups
 
-* Display current mode on 7segment display? (need investigations…) or in scribble.
 * Display track names and different values on scribbles 
 * Create a virtual strip to control EQ, Comp, and Limiter (web vue?)
 
