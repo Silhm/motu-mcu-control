@@ -186,12 +186,16 @@ class MidiWait:
         """
         Handle vPot click: restore default pan or gain
         """
-
+        apiRange = [-1, 1]
+        midiRange = [0, 127]
         newPos = 0
         address = "/mix/chan/{}/matrix/pan".format(ch)
         values = {"value": newPos}
         self.sendQueryMessage(address, values)
         self.settings.setVpotPos(ch, newPos)
+        # update led ring
+        midiVal = convertValueToMidiRange(newPos, apiRange, midiRange)
+        self.mcu.vPotRing(ch, midiVal, "boost-cut")
 
     def _handleVpotRot(self, cc, value):
         """
@@ -210,11 +214,10 @@ class MidiWait:
 
         address = "/mix/chan/{}/matrix/pan".format(ch)
         direction = 1 if 1 <= value <= 15 else -1
-        # speed= rotation[1] if rotation[1]>1 else 1
-        # _speeds = [10, 3, 2, 2, 1, 1, 1, 1, 1 , 1]
-        # newVal = currentVal + (direction * 5 * (pow(10, -1 * _speeds[speed]  )))
-
-        newPos = round(currentPos + (direction * 0.05), 3)
+        speed = 15-value if direction == 1 else 79-value
+        _speeds = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 3, 10]
+        speedPos = (direction * 5 * (pow(10, -1 * _speeds[speed])))
+        newPos = round(currentPos + speedPos, 3)
 
         if newPos > apiRange[1]:
             newPos = apiRange[1]
@@ -227,7 +230,7 @@ class MidiWait:
 
         # update led ring
         midiVal = convertValueToMidiRange(newPos, apiRange, midiRange)
-        self.mcu.vPotRing(ch, midiVal, "single-dot")
+        self.mcu.vPotRing(ch, midiVal, "boost-cut")
 
     def _handleSoloButton(self, ch):
         """
@@ -277,10 +280,12 @@ class MidiWait:
         """
         mainFaderValue = self.motu.getMainFader("midi")
         monitorFaderValue = self.motu.getMonitorFader("midi")
+        # TODO recall vPot
 
         self.mcu.resetController()
 
         if self.mcu.getMode() is "main":
+            self.mcu.resetController()
             self.mcu.faderPos(6, monitorFaderValue)
             self.mcu.faderPos(7, mainFaderValue)
 

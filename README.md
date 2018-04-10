@@ -22,7 +22,7 @@ It can be placed on your computer or on a RaspberryPi like computer board.
 * * Main output, with faders, select to enable
 * * Dim Main output by clicking on F8 button (apply -20dB on main)
 * Control inputs from strip 1 to 8 (mixer mode):
-* * Solo, mute, Pan (no feedback yet) and fader
+* * Solo, mute, Pan and Faders
 * Store settings in a database
 
 ## TODO

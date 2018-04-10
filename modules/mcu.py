@@ -83,42 +83,28 @@ class MCU:
         self.midiOUT.send(msg)
         # print("L2 LED{} : {}".format(fId, status))
 
-    def vPotRing(self, vPotId, value, mode):
+    def vPotRing(self, vPotId, value, mode="single-dot"):
         """
         mode could be :
             - "single-dot" (default)
             - "boost-cut"
             - "wrap"
             - "spread"
-        needTo analyze LogicControl_EN.pdf
-
-        B0, 3i, XX
-            31 hex  = 49 dec
-            XX:  0 p xx vv vv
-                 p : center led on (1) / off (0) -> no use with BCF
-                xx : vpot mode 00 -> 03
-                vv : value 00 -> 7F
         """
         modeByte = {
                 "single-dot": 0,
                 "boost-cut": 1,
                 "wrap": 2,
-                "spread": 3
+                "spread": 3,
+                "off": 0
         }
+        modeb = modeByte[mode]
+        cc = list(range(30, 38))[vPotId]
+        value = int(convertValueToOSCRange(value, [1, 11], [0, 127]))
+        msg = mido.Message.from_hex('B0 {} {}{:X}'.format(cc, modeb, value))
+        if mode is "off":
+            msg = mido.Message.from_hex('B0 {} 00'.format(cc))
 
-        byteArray = [0, 1, 0, modeByte[mode]]
-        valueAsBytes = (int(value)).to_bytes(1, byteorder='big')
-
-        bytesVal = bytes(byteArray) + valueAsBytes 
-        ccValue = 0
-        for bit in bytesVal:
-            ccValue = (ccValue << 1) | bit
-
-        print("vPot {}:{}  bytes[{}]   valToSend: {}".format(vPotId,value, bytesVal, ccValue))
-
-        cc = list(range(48, 56))[vPotId]
-        
-        msg = mido.Message('control_change',  control=cc, value=ccValue)
         self.midiOUT.send(msg)
 
     def faderPos(self, fId, pos):
@@ -139,6 +125,7 @@ class MCU:
             self.l1Led(f, False)
             self.l2Led(f, False)
             self.fLed(f, False)
+            self.vPotRing(f, 0, "off")
 
 
 if __name__ == "__main__":
