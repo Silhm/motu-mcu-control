@@ -20,20 +20,24 @@ It can be placed on your computer or on a RaspberryPi like computer board.
 * Control outputs (output mode): 
 * * Headphones, with faders, select to enable
 * * Main output, with faders, select to enable
-* * Dim Main output by clicking on F8 button (apply -20dB on main)
 * Control inputs from strip 1 to 8 (mixer mode):
 * * Solo, mute, Pan and Faders
 * Store settings in a database
+* Function buttons:
+* * F1: clear solo button
+* * F2: Mute / Unmute all
+* * F3 -> F7: not used now, inspiration welcome!
+* * F8: Dim Main output (apply -20dB on main)
+
 
 ## TODO
+* Need to group requests to minimize network traffic
+* Need to handle gain
 * Handle banks to use multiple layers of fader if more than 8 channels
+* Handle flip mode (invert fader and rotary vPot)
 * Handle the send mode:
 * * Using already defined personal send vues
 * * Selecting a send output, then selecting all desired strips to add to the vue
-* Change dim value by keeping dim button down and use vpot to set it up
-* Handle flip mode (invert fader and rotary vPot)
-* Add a mute all / unmute all
-* Add a clear solo button
 * Handle MCU extension for larger setups
 
 * Display track names and different values on scribbles 

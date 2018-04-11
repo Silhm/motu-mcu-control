@@ -233,14 +233,17 @@ class Motu:
         else:
             return False
 
-    def getPan(self, ch):
+    def getPan(self, ch, datatype="api"):
         """
         Get Pan of a given channel 
         > from -1 to 1
         """
         address = "/mix/chan/{}/matrix/pan".format(ch)
         pan = self._get(address)
-        return pan["value"]
+        if datatype is "midi":
+            return convertValueToMidiRange(pan["value"], [-1, 1], [0, 127])
+        else:
+            return pan["value"]
 
     ###################################################
     def setEq(self, ch, eq):

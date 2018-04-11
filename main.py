@@ -82,7 +82,7 @@ class MidiWait:
             muteMidiNotes = ["C1", "C#1", "D1", "D#1", "E1", "F1", "F#1", "G1"]
             vPotMidiNotes = ["G#1", "A1", "A#1", "B1", "C2", "C#2", "D2", "D#2"]
             bankMidiNotes = ["A#2", "B2"]
-            functionMidiNotes = ["G2", "G#2", "F2", "F#2", "G6", "A6", "G#6", "A#6"]
+            functionMidiNotes = ["G#2", "G2", "F#2", "F2", "G6", "G#6", "A6",  "A#6"]
             midiFullNote = midiNumberToFullNote(midiMessage.note)
 
             # Solo
@@ -133,6 +133,18 @@ class MidiWait:
         print("Button F{} clicked".format(fNum))
         # get previous know state and toggle it
         fState = self.settings.getFunction(fNum)
+
+        if fNum == 0:
+            # Mute/unMute All
+            self.motu.clearSolo()
+            self.recall()
+
+        if fNum == 1:
+            # Mute/unMute All
+            self.motu.muteAll(not fState)
+            fState = self.settings.setFunction(fNum, not fState)
+            self.mcu.fLed(1, fState)
+            self.recall()
 
         if fNum == 7:
             self.motu.dim(not fState)
@@ -280,9 +292,9 @@ class MidiWait:
         """
         mainFaderValue = self.motu.getMainFader("midi")
         monitorFaderValue = self.motu.getMonitorFader("midi")
-        # TODO recall vPot
 
         self.mcu.resetController()
+        self.mcu.setMode(self.mcu.getMode())
 
         if self.mcu.getMode() is "main":
             self.mcu.resetController()
@@ -297,10 +309,13 @@ class MidiWait:
                 solo = self.motu.getSolo(ch)
                 mute = self.motu.getMute(ch)
                 fader = self.motu.getFader(ch, "midi")
+                pan = self.motu.getPan(ch, "midi")
                 self.mcu.l1Led(ch, solo)
                 self.mcu.l2Led(ch, mute)
                 self.mcu.faderPos(ch, fader)
-                print("[{}] Solo:{}  Mute:{}  fader:{}".format(ch, solo, mute, fader))
+                self.mcu.vPotRing(ch, pan, "boost-cut")
+                # print("[{}] Solo:{}  Mute:{}  fader:{}".format(ch, solo, mute, fader))
+
 
 
 if __name__ == "__main__":

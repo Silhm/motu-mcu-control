@@ -67,9 +67,9 @@ def convertValueToMidiRange(oscValue, oscRange, midiRange, scale="linear"):
         sc = (maxOSC - minOSC) / (maxMidi - minMidi)
         midiVal = int(math.exp(minOSC + sc*(oscValue-minMidi)))
         """
-        dbVal = 20 * math.log(oscValue+0.001)
+        dbVal = 20 * math.log(oscValue+0.00001)
         scale = (maxOSC - minOSC) / (maxMidi - minMidi)
-        midiVal = (math.log(oscValue+0.001) - minOSC) / scale + minMidi
+        midiVal = (math.log(oscValue+0.00001) - minOSC) / scale + minMidi
 
         # expected ~5500 pitch
         # print(" PITCH = {}  >>  VAL = {}  ({} dB)".format(midiVal, oscValue, dbVal))
@@ -100,12 +100,12 @@ def convertValueToOSCRange(midiValue, oscRange, midiRange, scale="linear"):
     if scale is "log":
         # analyze https://stackoverflow.com/questions/846221/logarithmic-slider#846249
         # and : https://www.image-line.com/support/FLHelp/html/mixer_dB.htm
-        minOSC = math.log(minOSC+0.001)
+        minOSC = math.log(minOSC+0.00001)
         maxOSC = math.log(maxOSC)
         # calculate adjustment factor
         sc = (maxOSC - minOSC) / (maxMidi - minMidi)
         oscVal = math.exp(minOSC + sc*(midiValue-minMidi))
-        dbVal = 20 * math.log(oscVal+0.001)
+        dbVal = 20 * math.log(oscVal+0.00001)
 
     # print(" PITCH = {}  >>  VAL = {} ({} dB)".format(midiValue, oscVal, dbVal))
     return oscVal
