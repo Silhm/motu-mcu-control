@@ -10,7 +10,7 @@ from modules.midiHelper import *
 from modules.settings import Settings
 
 fader_api_range = [0, 4]
-fader_midi_range = [-8192, 8176]
+fader_midi_range = [-8192, 8192]
 
 class Motu:
 

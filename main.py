@@ -179,7 +179,7 @@ class MidiWait:
         # TODO handle banking
 
         apiRange = [0, 4]
-        midiRange = [-8192, 8176]
+        midiRange = [-8192, 8192]
 
         faderValue = convertValueToOSCRange(value, apiRange, midiRange, "log")
 

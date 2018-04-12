@@ -4,7 +4,7 @@ import time
 from modules.midiHelper import *
 
 fader_api_range = [0, 4]
-fader_midi_range = [-8192, 8176]
+fader_midi_range = [-8192, 8192]
 
 strips_count = 8
 
@@ -113,7 +113,8 @@ class MCU:
         :param pos:
         :return:
         """
-        msg = mido.Message('pitchwheel',  channel=fId, pitch=pos)
+        #TODO: ensure it's on the right range to prevent crash
+        msg = mido.Message('pitchwheel', channel=fId, pitch=pos)
         self.midiOUT.send(msg)
 
     def resetController(self):
