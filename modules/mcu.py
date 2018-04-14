@@ -113,7 +113,11 @@ class MCU:
         :param pos:
         :return:
         """
-        #TODO: ensure it's on the right range to prevent crash
+        # Ensure it's on the right range to prevent crash
+        if pos < -8192:
+            pos = -8192
+        elif pos > 8192:
+            pos = 8191
         msg = mido.Message('pitchwheel', channel=fId, pitch=pos)
         self.midiOUT.send(msg)
 

@@ -293,6 +293,11 @@ class MidiWait:
         mainFaderValue = self.motu.getMainFader("midi")
         monitorFaderValue = self.motu.getMonitorFader("midi")
 
+
+        # recall all in once
+        #self.motu.recallSettings()
+
+
         self.mcu.resetController()
         self.mcu.setMode(self.mcu.getMode())
 

@@ -360,3 +360,17 @@ class Motu:
         """
         # TODO
         return "Track {}".format(ch)
+
+
+    def recallSettings(self):
+        """
+        Get all settings in one request
+        :return:
+        """
+        address = "/"
+        dataStore = self._get(address)
+        print(dataStore)
+
+
+
+
